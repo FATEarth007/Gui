@@ -1,541 +1,461 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local Library = {}
 
-local oldGui = playerGui:FindFirstChild("AutomationGui")
-if oldGui then
-	oldGui:Destroy()
+local Theme = {
+	Background = Color3.fromRGB(18, 18, 22),
+	TopBar = Color3.fromRGB(24, 24, 30),
+	Sidebar = Color3.fromRGB(21, 21, 26),
+	Section = Color3.fromRGB(28, 28, 34),
+	Element = Color3.fromRGB(35, 35, 42),
+	ElementHover = Color3.fromRGB(43, 43, 52),
+	Accent = Color3.fromRGB(190, 35, 35),
+	Text = Color3.fromRGB(240, 240, 240),
+	MutedText = Color3.fromRGB(170, 170, 175),
+}
+
+local function createCorner(parent, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 6)
+	corner.Parent = parent
+
+	return corner
 end
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutomationGui"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = playerGui
+local function createPadding(parent, amount)
+	local padding = Instance.new("UIPadding")
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.fromOffset(620, 390)
-mainFrame.Position = UDim2.new(0.5, -310, 0.5, -195)
-mainFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 29)
-mainFrame.BorderSizePixel = 0
-mainFrame.ClipsDescendants = true
-mainFrame.Parent = screenGui
+	padding.PaddingTop = UDim.new(0, amount)
+	padding.PaddingBottom = UDim.new(0, amount)
+	padding.PaddingLeft = UDim.new(0, amount)
+	padding.PaddingRight = UDim.new(0, amount)
 
+	padding.Parent = parent
 
+	return padding
+end
 
--- Top bar
+local function makeDraggable(frame, dragHandle)
+	local dragging = false
+	local dragStart
+	local startPosition
 
-local topBar = Instance.new("Frame")
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 45)
-topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-topBar.BorderSizePixel = 0
-topBar.Active = true
-topBar.Parent = mainFrame
+	dragHandle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPosition = frame.Position
+		end
+	end)
 
-local title = Instance.new("TextLabel")
-title.Name = "Title"
-title.Size = UDim2.new(1, -90, 1, 0)
-title.Position = UDim2.fromOffset(15, 0)
-title.BackgroundTransparency = 1
-title.Text = "FatE Hub"
-title.TextColor3 = Color3.fromRGB(240, 240, 245)
-title.TextSize = 18
-title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = topBar
+	dragHandle.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
 
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "CloseButton"
-closeButton.Size = UDim2.fromOffset(45, 45)
-closeButton.Position = UDim2.new(1, -45, 0, 0)
-closeButton.BackgroundTransparency = 1
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(220, 220, 225)
-closeButton.TextSize = 18
-closeButton.Font = Enum.Font.GothamBold
-closeButton.Parent = topBar
+	UserInputService.InputChanged:Connect(function(input)
+		if not dragging then
+			return
+		end
 
-closeButton.MouseButton1Click:Connect(function()
-	mainFrame.Visible = false
-end)
+		if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+			return
+		end
 
-local minimizeButton = Instance.new("TextButton")
-minimizeButton.Name = "MinimizeButton"
-minimizeButton.Size = UDim2.fromOffset(45, 45)
-minimizeButton.Position = UDim2.new(1, -90, 0, 0)
-minimizeButton.BackgroundTransparency = 1
-minimizeButton.Text = "−"
-minimizeButton.TextColor3 = Color3.fromRGB(220, 220, 225)
-minimizeButton.TextSize = 22
-minimizeButton.Font = Enum.Font.GothamBold
-minimizeButton.Parent = topBar
+		local delta = input.Position - dragStart
 
+		frame.Position = UDim2.new(
+			startPosition.X.Scale,
+			startPosition.X.Offset + delta.X,
+			startPosition.Y.Scale,
+			startPosition.Y.Offset + delta.Y
+		)
+	end)
+end
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 10)
-mainCorner.Parent = mainFrame
+function Library:CreateWindow(options)
+	options = options or {}
 
-screenGui.Enabled = true
-mainFrame.Visible = true
+	local titleText = options.Title or "Fate UI"
+	local toggleKey = options.ToggleKey or Enum.KeyCode.RightShift
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then
-		return
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	local oldGui = playerGui:FindFirstChild("FateUI")
+
+	if oldGui then
+		oldGui:Destroy()
 	end
 
-	if input.KeyCode == Enum.KeyCode.RightShift then
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "FateUI"
+	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.Parent = playerGui
+
+	local mainFrame = Instance.new("Frame")
+	mainFrame.Name = "MainFrame"
+	mainFrame.Size = UDim2.fromOffset(680, 440)
+	mainFrame.Position = UDim2.new(0.5, -340, 0.5, -220)
+	mainFrame.BackgroundColor3 = Theme.Background
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Parent = screenGui
+
+	createCorner(mainFrame, 9)
+
+	local topBar = Instance.new("Frame")
+	topBar.Name = "TopBar"
+	topBar.Size = UDim2.new(1, 0, 0, 42)
+	topBar.BackgroundColor3 = Theme.TopBar
+	topBar.BorderSizePixel = 0
+	topBar.Parent = mainFrame
+
+	createCorner(topBar, 9)
+
+	local topBarCover = Instance.new("Frame")
+	topBarCover.Size = UDim2.new(1, 0, 0, 10)
+	topBarCover.Position = UDim2.new(0, 0, 1, -10)
+	topBarCover.BackgroundColor3 = Theme.TopBar
+	topBarCover.BorderSizePixel = 0
+	topBarCover.Parent = topBar
+
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Size = UDim2.new(1, -100, 1, 0)
+	title.Position = UDim2.fromOffset(14, 0)
+	title.BackgroundTransparency = 1
+	title.Text = titleText
+	title.TextColor3 = Theme.Text
+	title.TextSize = 17
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = topBar
+
+	local minimizeButton = Instance.new("TextButton")
+	minimizeButton.Name = "MinimizeButton"
+	minimizeButton.Size = UDim2.fromOffset(38, 30)
+	minimizeButton.Position = UDim2.new(1, -80, 0, 6)
+	minimizeButton.BackgroundTransparency = 1
+	minimizeButton.Text = "—"
+	minimizeButton.TextColor3 = Theme.MutedText
+	minimizeButton.TextSize = 18
+	minimizeButton.Font = Enum.Font.GothamBold
+	minimizeButton.Parent = topBar
+
+	local closeButton = Instance.new("TextButton")
+	closeButton.Name = "CloseButton"
+	closeButton.Size = UDim2.fromOffset(38, 30)
+	closeButton.Position = UDim2.new(1, -42, 0, 6)
+	closeButton.BackgroundTransparency = 1
+	closeButton.Text = "×"
+	closeButton.TextColor3 = Theme.MutedText
+	closeButton.TextSize = 23
+	closeButton.Font = Enum.Font.GothamBold
+	closeButton.Parent = topBar
+
+	local sidebar = Instance.new("Frame")
+	sidebar.Name = "Sidebar"
+	sidebar.Size = UDim2.new(0, 150, 1, -42)
+	sidebar.Position = UDim2.fromOffset(0, 42)
+	sidebar.BackgroundColor3 = Theme.Sidebar
+	sidebar.BorderSizePixel = 0
+	sidebar.Parent = mainFrame
+
+	local tabList = Instance.new("UIListLayout")
+	tabList.Padding = UDim.new(0, 6)
+	tabList.SortOrder = Enum.SortOrder.LayoutOrder
+	tabList.Parent = sidebar
+
+	createPadding(sidebar, 10)
+
+	local pageContainer = Instance.new("Frame")
+	pageContainer.Name = "PageContainer"
+	pageContainer.Size = UDim2.new(1, -150, 1, -42)
+	pageContainer.Position = UDim2.fromOffset(150, 42)
+	pageContainer.BackgroundTransparency = 1
+	pageContainer.ClipsDescendants = true
+	pageContainer.Parent = mainFrame
+
+	local Window = {}
+
+	Window.ScreenGui = screenGui
+	Window.MainFrame = mainFrame
+	Window.Sidebar = sidebar
+	Window.PageContainer = pageContainer
+
+	local pages = {}
+	local tabButtons = {}
+	local firstTab = true
+	local minimized = false
+
+	local function showPage(selectedPage, selectedButton)
+		for _, page in ipairs(pages) do
+			page.Visible = page == selectedPage
+		end
+
+		for _, button in ipairs(tabButtons) do
+			button.BackgroundColor3 =
+				button == selectedButton and Theme.Accent or Theme.Element
+		end
+	end
+
+	function Window:CreateTab(tabName)
+		local tabButton = Instance.new("TextButton")
+		tabButton.Name = tabName .. "TabButton"
+		tabButton.Size = UDim2.new(1, 0, 0, 38)
+		tabButton.BackgroundColor3 = Theme.Element
+		tabButton.BorderSizePixel = 0
+		tabButton.Text = tabName
+		tabButton.TextColor3 = Theme.Text
+		tabButton.TextSize = 14
+		tabButton.Font = Enum.Font.GothamMedium
+		tabButton.Parent = sidebar
+
+		createCorner(tabButton, 6)
+
+		local page = Instance.new("ScrollingFrame")
+		page.Name = tabName .. "Page"
+		page.Size = UDim2.new(1, 0, 1, 0)
+		page.BackgroundTransparency = 1
+		page.BorderSizePixel = 0
+		page.ScrollBarThickness = 3
+		page.ScrollBarImageColor3 = Theme.Accent
+		page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		page.CanvasSize = UDim2.new()
+		page.Visible = false
+		page.Parent = pageContainer
+
+		local pageLayout = Instance.new("UIListLayout")
+		pageLayout.Padding = UDim.new(0, 10)
+		pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		pageLayout.Parent = page
+
+		createPadding(page, 12)
+
+		table.insert(pages, page)
+		table.insert(tabButtons, tabButton)
+
+		tabButton.MouseButton1Click:Connect(function()
+			showPage(page, tabButton)
+		end)
+
+		if firstTab then
+			firstTab = false
+			showPage(page, tabButton)
+		end
+
+		local Tab = {}
+
+		Tab.Page = page
+		Tab.Button = tabButton
+
+		function Tab:CreateSection(sectionName)
+			local section = Instance.new("Frame")
+			section.Name = sectionName .. "Section"
+			section.Size = UDim2.new(1, -4, 0, 0)
+			section.AutomaticSize = Enum.AutomaticSize.Y
+			section.BackgroundColor3 = Theme.Section
+			section.BorderSizePixel = 0
+			section.Parent = page
+
+			createCorner(section, 7)
+			createPadding(section, 10)
+
+			local sectionLayout = Instance.new("UIListLayout")
+			sectionLayout.Padding = UDim.new(0, 8)
+			sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			sectionLayout.Parent = section
+
+			local sectionTitle = Instance.new("TextLabel")
+			sectionTitle.Name = "SectionTitle"
+			sectionTitle.Size = UDim2.new(1, 0, 0, 24)
+			sectionTitle.BackgroundTransparency = 1
+			sectionTitle.Text = sectionName
+			sectionTitle.TextColor3 = Theme.Text
+			sectionTitle.TextSize = 14
+			sectionTitle.Font = Enum.Font.GothamBold
+			sectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+			sectionTitle.Parent = section
+
+			local Section = {}
+
+			Section.Frame = section
+
+			function Section:CreateButton(buttonOptions)
+				buttonOptions = buttonOptions or {}
+
+				local callback = buttonOptions.Callback or function() end
+
+				local button = Instance.new("TextButton")
+				button.Name = buttonOptions.Name or "Button"
+				button.Size = UDim2.new(1, 0, 0, 38)
+				button.BackgroundColor3 = Theme.Element
+				button.BorderSizePixel = 0
+				button.Text = buttonOptions.Name or "Button"
+				button.TextColor3 = Theme.Text
+				button.TextSize = 14
+				button.Font = Enum.Font.GothamMedium
+				button.Parent = section
+
+				createCorner(button, 6)
+
+				button.MouseEnter:Connect(function()
+					button.BackgroundColor3 = Theme.ElementHover
+				end)
+
+				button.MouseLeave:Connect(function()
+					button.BackgroundColor3 = Theme.Element
+				end)
+
+				button.MouseButton1Click:Connect(function()
+					local success, err = pcall(callback)
+
+					if not success then
+						warn("[FateUI Button Error]", err)
+					end
+				end)
+
+				return button
+			end
+
+			function Section:CreateToggle(toggleOptions)
+				toggleOptions = toggleOptions or {}
+
+				local callback = toggleOptions.Callback or function() end
+				local enabled = toggleOptions.Default == true
+
+				local toggleButton = Instance.new("TextButton")
+				toggleButton.Name = toggleOptions.Name or "Toggle"
+				toggleButton.Size = UDim2.new(1, 0, 0, 38)
+				toggleButton.BackgroundColor3 = Theme.Element
+				toggleButton.BorderSizePixel = 0
+				toggleButton.Text = ""
+				toggleButton.Parent = section
+
+				createCorner(toggleButton, 6)
+
+				local label = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, -58, 1, 0)
+				label.Position = UDim2.fromOffset(12, 0)
+				label.BackgroundTransparency = 1
+				label.Text = toggleOptions.Name or "Toggle"
+				label.TextColor3 = Theme.Text
+				label.TextSize = 14
+				label.Font = Enum.Font.GothamMedium
+				label.TextXAlignment = Enum.TextXAlignment.Left
+				label.Parent = toggleButton
+
+				local indicator = Instance.new("Frame")
+				indicator.Size = UDim2.fromOffset(34, 18)
+				indicator.Position = UDim2.new(1, -44, 0.5, -9)
+				indicator.BorderSizePixel = 0
+				indicator.Parent = toggleButton
+
+				createCorner(indicator, 9)
+
+				local knob = Instance.new("Frame")
+				knob.Size = UDim2.fromOffset(14, 14)
+				knob.Position = UDim2.fromOffset(2, 2)
+				knob.BackgroundColor3 = Theme.Text
+				knob.BorderSizePixel = 0
+				knob.Parent = indicator
+
+				createCorner(knob, 7)
+
+				local function update()
+					indicator.BackgroundColor3 =
+						enabled and Theme.Accent or Color3.fromRGB(70, 70, 78)
+
+					knob.Position =
+						enabled and UDim2.fromOffset(18, 2)
+						or UDim2.fromOffset(2, 2)
+				end
+
+				local function setValue(value, fireCallback)
+					enabled = value == true
+					update()
+
+					if fireCallback then
+						local success, err = pcall(callback, enabled)
+
+						if not success then
+							warn("[FateUI Toggle Error]", err)
+						end
+					end
+				end
+
+				toggleButton.MouseButton1Click:Connect(function()
+					setValue(not enabled, true)
+				end)
+
+				update()
+
+				local Toggle = {}
+
+				function Toggle:Set(value)
+					setValue(value, true)
+				end
+
+				function Toggle:Get()
+					return enabled
+				end
+
+				return Toggle
+			end
+
+			return Section
+		end
+
+		return Tab
+	end
+
+	function Window:Show()
+		mainFrame.Visible = true
+	end
+
+	function Window:Hide()
+		mainFrame.Visible = false
+	end
+
+	function Window:Toggle()
 		mainFrame.Visible = not mainFrame.Visible
 	end
-end)
 
--- Left navigation
-
-local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
-sidebar.Size = UDim2.new(0, 170, 1, -45)
-sidebar.Position = UDim2.fromOffset(0, 45)
-sidebar.BackgroundColor3 = Color3.fromRGB(29, 29, 35)
-sidebar.BorderSizePixel = 0
-sidebar.Parent = mainFrame
-
-local navigation = Instance.new("ScrollingFrame")
-navigation.Name = "Navigation"
-navigation.Size = UDim2.new(1, 0, 1, 0)
-navigation.BackgroundTransparency = 1
-navigation.BorderSizePixel = 0
-navigation.ScrollBarThickness = 4
-navigation.ScrollBarImageColor3 = Color3.fromRGB(105, 105, 120)
-navigation.CanvasSize = UDim2.fromOffset(0, 0)
-navigation.AutomaticCanvasSize = Enum.AutomaticSize.Y
-navigation.ScrollingDirection = Enum.ScrollingDirection.Y
-navigation.Parent = sidebar
-
-local navigationPadding = Instance.new("UIPadding")
-navigationPadding.PaddingTop = UDim.new(0, 10)
-navigationPadding.PaddingBottom = UDim.new(0, 10)
-navigationPadding.PaddingLeft = UDim.new(0, 10)
-navigationPadding.PaddingRight = UDim.new(0, 10)
-navigationPadding.Parent = navigation
-
-local navigationLayout = Instance.new("UIListLayout")
-navigationLayout.Padding = UDim.new(0, 8)
-navigationLayout.SortOrder = Enum.SortOrder.LayoutOrder
-navigationLayout.Parent = navigation
-
--- Right content container
-
-local contentContainer = Instance.new("Frame")
-contentContainer.Name = "ContentContainer"
-contentContainer.Size = UDim2.new(1, -170, 1, -45)
-contentContainer.Position = UDim2.fromOffset(170, 45)
-contentContainer.BackgroundColor3 = Color3.fromRGB(24, 24, 29)
-contentContainer.BorderSizePixel = 0
-contentContainer.Parent = mainFrame
-
-local minimized = false
-local expandedSize = UDim2.fromOffset(620, 390)
-local minimizedSize = UDim2.fromOffset(620, 45)
-
-local function setMinimized(shouldMinimize)
-	minimized = shouldMinimize
-
-	if minimized then
-		sidebar.Visible = false
-		contentContainer.Visible = false
-		mainFrame.Size = minimizedSize
-		minimizeButton.Text = "+"
-	else
-		sidebar.Visible = true
-		contentContainer.Visible = true
-		mainFrame.Size = expandedSize
-		minimizeButton.Text = "−"
-	end
-end
-
-minimizeButton.MouseButton1Click:Connect(function()
-	setMinimized(not minimized)
-end)
-
-
-
-
-local contentPadding = Instance.new("UIPadding")
-contentPadding.PaddingTop = UDim.new(0, 18)
-contentPadding.PaddingBottom = UDim.new(0, 18)
-contentPadding.PaddingLeft = UDim.new(0, 20)
-contentPadding.PaddingRight = UDim.new(0, 20)
-contentPadding.Parent = contentContainer
-
-local pages = {}
-local navigationButtons = {}
-local currentPage = nil
-
-local normalButtonColor = Color3.fromRGB(40, 40, 48)
-local selectedButtonColor = Color3.fromRGB(75, 95, 180)
-
-local function createPage(pageName, headingText)
-	local page = Instance.new("ScrollingFrame")
-	page.Name = pageName
-	page.Size = UDim2.fromScale(1, 1)
-	page.BackgroundTransparency = 1
-	page.BorderSizePixel = 0
-	page.ScrollBarThickness = 4
-	page.ScrollBarImageColor3 = Color3.fromRGB(105, 105, 120)
-	page.CanvasSize = UDim2.fromOffset(0, 0)
-	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	page.Visible = false
-	page.Parent = contentContainer
-
-	local pageLayout = Instance.new("UIListLayout")
-	pageLayout.Padding = UDim.new(0, 12)
-	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	pageLayout.Parent = page
-
-	local heading = Instance.new("TextLabel")
-	heading.Name = "Heading"
-	heading.Size = UDim2.new(1, -10, 0, 35)
-	heading.BackgroundTransparency = 1
-	heading.Text = headingText
-	heading.TextColor3 = Color3.fromRGB(245, 245, 250)
-	heading.TextSize = 23
-	heading.Font = Enum.Font.GothamBold
-	heading.TextXAlignment = Enum.TextXAlignment.Left
-	heading.Parent = page
-
-	pages[pageName] = page
-
-	return page
-end
-
-local function showPage(pageName)
-	for name, page in pairs(pages) do
-		page.Visible = name == pageName
+	function Window:Destroy()
+		screenGui:Destroy()
 	end
 
-	for name, button in pairs(navigationButtons) do
-		if name == pageName then
-			button.BackgroundColor3 = selectedButtonColor
-		else
-			button.BackgroundColor3 = normalButtonColor
-		end
-	end
+	minimizeButton.MouseButton1Click:Connect(function()
+		minimized = not minimized
 
-	currentPage = pageName
-end
+		sidebar.Visible = not minimized
+		pageContainer.Visible = not minimized
 
-local function createNavigationButton(pageName, buttonText)
-	local button = Instance.new("TextButton")
-	button.Name = pageName .. "Button"
-	button.Size = UDim2.new(1, 0, 0, 42)
-	button.BackgroundColor3 = normalButtonColor
-	button.BorderSizePixel = 0
-	button.Text = buttonText
-	button.TextColor3 = Color3.fromRGB(230, 230, 235)
-	button.TextSize = 15
-	button.Font = Enum.Font.GothamMedium
-	button.AutoButtonColor = false
-	button.Parent = navigation
-
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 7)
-	buttonCorner.Parent = button
-
-	button.MouseButton1Click:Connect(function()
-		showPage(pageName)
+		mainFrame.Size =
+			minimized and UDim2.fromOffset(680, 42)
+			or UDim2.fromOffset(680, 440)
 	end)
 
-	button.MouseEnter:Connect(function()
-		if currentPage ~= pageName then
-			button.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+	closeButton.MouseButton1Click:Connect(function()
+		mainFrame.Visible = false
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if processed then
+			return
+		end
+
+		if input.KeyCode == toggleKey then
+			mainFrame.Visible = not mainFrame.Visible
 		end
 	end)
 
-	button.MouseLeave:Connect(function()
-		if currentPage ~= pageName then
-			button.BackgroundColor3 = normalButtonColor
-		end
-	end)
+	makeDraggable(mainFrame, topBar)
 
-	navigationButtons[pageName] = button
-
-	return button
+	return Window
 end
 
-local function createSection(parent, sectionTitle)
-	local section = Instance.new("Frame")
-	section.Name = sectionTitle:gsub("%s+", "") .. "Section"
-	section.Size = UDim2.new(1, -10, 0, 0)
-	section.AutomaticSize = Enum.AutomaticSize.Y
-	section.BackgroundColor3 = Color3.fromRGB(32, 32, 39)
-	section.BorderSizePixel = 0
-	section.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = section
-
-	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 12)
-	padding.PaddingBottom = UDim.new(0, 12)
-	padding.PaddingLeft = UDim.new(0, 12)
-	padding.PaddingRight = UDim.new(0, 12)
-	padding.Parent = section
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 10)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = section
-
-	local label = Instance.new("TextLabel")
-	label.Name = "SectionTitle"
-	label.Size = UDim2.new(1, 0, 0, 26)
-	label.BackgroundTransparency = 1
-	label.Text = sectionTitle
-	label.TextColor3 = Color3.fromRGB(235, 235, 240)
-	label.TextSize = 17
-	label.Font = Enum.Font.GothamBold
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = section
-
-	return section
-end
-
-local function createActionButton(parent, buttonText, callback)
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, 0, 0, 40)
-	button.BackgroundColor3 = Color3.fromRGB(55, 55, 66)
-	button.BorderSizePixel = 0
-	button.Text = buttonText
-	button.TextColor3 = Color3.fromRGB(240, 240, 245)
-	button.TextSize = 15
-	button.Font = Enum.Font.GothamMedium
-	button.AutoButtonColor = true
-	button.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 7)
-	corner.Parent = button
-
-	button.MouseButton1Click:Connect(callback)
-
-	return button
-end
-
-local function createToggle(parent, toggleText, defaultValue, callback)
-	local enabled = defaultValue
-
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, 0, 0, 42)
-	button.BackgroundColor3 = Color3.fromRGB(55, 55, 66)
-	button.BorderSizePixel = 0
-	button.Text = ""
-	button.AutoButtonColor = false
-	button.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 7)
-	corner.Parent = button
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -65, 1, 0)
-	label.Position = UDim2.fromOffset(12, 0)
-	label.BackgroundTransparency = 1
-	label.Text = toggleText
-	label.TextColor3 = Color3.fromRGB(235, 235, 240)
-	label.TextSize = 15
-	label.Font = Enum.Font.GothamMedium
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = button
-
-	local stateLabel = Instance.new("TextLabel")
-	stateLabel.Size = UDim2.fromOffset(48, 26)
-	stateLabel.Position = UDim2.new(1, -56, 0.5, -13)
-	stateLabel.BorderSizePixel = 0
-	stateLabel.TextSize = 12
-	stateLabel.Font = Enum.Font.GothamBold
-	stateLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	stateLabel.Parent = button
-
-	local stateCorner = Instance.new("UICorner")
-	stateCorner.CornerRadius = UDim.new(1, 0)
-	stateCorner.Parent = stateLabel
-
-	local function updateAppearance()
-		if enabled then
-			stateLabel.Text = "ON"
-			stateLabel.BackgroundColor3 = Color3.fromRGB(70, 150, 90)
-		else
-			stateLabel.Text = "OFF"
-			stateLabel.BackgroundColor3 = Color3.fromRGB(130, 65, 65)
-		end
-	end
-
-	button.MouseButton1Click:Connect(function()
-		enabled = not enabled
-		updateAppearance()
-		callback(enabled)
-	end)
-
-	updateAppearance()
-
-	return button
-end
-
--- Create pages
-
-local homePage = createPage("Home", "Home")
-local farmingPage = createPage("Farming", "Farming")
-local upgradesPage = createPage("Upgrades", "Upgrades")
-local movementPage = createPage("Movement", "Movement")
-local settingsPage = createPage("Settings", "Settings")
-
--- Navigation buttons
-
-createNavigationButton("Home", "Home")
-createNavigationButton("Farming", "Farming")
-createNavigationButton("Upgrades", "Upgrades")
-createNavigationButton("Movement", "Movement")
-createNavigationButton("Settings", "Settings")
-
--- Home content
-
-local statusSection = createSection(homePage, "Status")
-
-local statusText = Instance.new("TextLabel")
-statusText.Size = UDim2.new(1, 0, 0, 50)
-statusText.BackgroundTransparency = 1
-statusText.Text = "Select a section from the menu."
-statusText.TextWrapped = true
-statusText.TextColor3 = Color3.fromRGB(190, 190, 200)
-statusText.TextSize = 15
-statusText.Font = Enum.Font.Gotham
-statusText.TextXAlignment = Enum.TextXAlignment.Left
-statusText.Parent = statusSection
-
-local actionsSection = createSection(homePage, "Actions")
-
-createActionButton(actionsSection, "Start All", function()
-	statusText.Text = "All automation started."
-end)
-
-createActionButton(actionsSection, "Stop All", function()
-	statusText.Text = "All automation stopped."
-end)
-
--- Farming content
-
-local farmingSection = createSection(farmingPage, "Farming Options")
-
-createToggle(farmingSection, "Auto Collect", false, function(enabled)
-	print("Auto Collect:", enabled)
-end)
-
-createToggle(farmingSection, "Auto Sell", false, function(enabled)
-	print("Auto Sell:", enabled)
-end)
-
-createToggle(farmingSection, "Auto Rebirth", false, function(enabled)
-	print("Auto Rebirth:", enabled)
-end)
-
--- Upgrades content
-
-local upgradesSection = createSection(upgradesPage, "Upgrade Options")
-
-createToggle(upgradesSection, "Auto Buy Upgrades", false, function(enabled)
-	print("Auto Buy Upgrades:", enabled)
-end)
-
-createToggle(upgradesSection, "Buy Cheapest First", false, function(enabled)
-	print("Buy Cheapest First:", enabled)
-end)
-
-createActionButton(upgradesSection, "Buy Available Upgrades", function()
-	print("Buying available upgrades")
-end)
-
--- Movement content
-
-local movementSection = createSection(movementPage, "Movement Options")
-
-createActionButton(movementSection, "Return to Spawn", function()
-	print("Return to spawn")
-end)
-
-createActionButton(movementSection, "Go to Shop", function()
-	print("Go to shop")
-end)
-
-createActionButton(movementSection, "Go to Upgrade Area", function()
-	print("Go to upgrade area")
-end)
-
--- Settings content
-
-local settingsSection = createSection(settingsPage, "Interface")
-
-createToggle(settingsSection, "Show Status Messages", true, function(enabled)
-	print("Status messages:", enabled)
-end)
-
-createActionButton(settingsSection, "Hide Interface", function()
-	mainFrame.Visible = false
-end)
-
--- Draggable top bar
-
-local dragging = false
-local dragStart
-local startingPosition
-local dragInput
-
-local function updateDrag(input)
-	if not dragStart or not startingPosition then
-		return
-	end
-
-	local delta = input.Position - dragStart
-
-	mainFrame.Position = UDim2.new(
-		startingPosition.X.Scale,
-		startingPosition.X.Offset + delta.X,
-		startingPosition.Y.Scale,
-		startingPosition.Y.Offset + delta.Y
-	)
-end
-
-topBar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
-
-		dragging = true
-		dragStart = input.Position
-		startingPosition = mainFrame.Position
-
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-topBar.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch then
-
-		dragInput = input
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input == dragInput then
-		updateDrag(input)
-	end
-end)
-
-showPage("Home")
+return Library
