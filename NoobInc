@@ -1,0 +1,45 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Library = require(ReplicatedStorage:WaitForChild("FateUI"))
+
+local Window = Library:CreateWindow({
+	Title = "FatE Hub"
+})
+
+local Realm1 = Window:CreateTab("Realm 1")
+
+local Realm1General = Realm1:CreateSection("General")
+local Realm1Player = Realm1:CreateSection("Player")
+
+Realm1General:CreateButton({
+	Name = "Collect",
+	Callback = function()
+		print("Collect clicked")
+	end
+})
+
+Realm1General:CreateToggle({
+	Name = "Auto Farm",
+	Callback = function(value)
+		print("Auto Farm:", value)
+	end
+})
+
+local Realm2 = Window:CreateTab("Realm 2")
+local Realm2General = Realm2:CreateSection("General")
+
+Realm2General:CreateButton({
+	Name = "Realm 2 Test",
+	Callback = function()
+		print("Realm 2 button clicked")
+	end
+})
+
+local Realm3 = Window:CreateTab("Realm 3")
+local Realm3General = Realm3:CreateSection("General")
+
+Realm3General:CreateButton({
+	Name = "Realm 3 Test",
+	Callback = function()
+		print("Realm 3 button clicked")
+	end
+})
