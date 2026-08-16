@@ -4,41 +4,72 @@ local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
-local Realm1 = Window:CreateTab("Realm 1")
+local World6 = Window:CreateTab("World 6")
+local TitanSection = World6:CreateSection("Titan")
 
-local Realm1General = Realm1:CreateSection("General")
-local Realm1Player = Realm1:CreateSection("Player")
+local AutoTitanEnabled = false
+local SelectedTitanUpgrades = {}
+local TitanInterval = 1
 
-Realm1General:CreateButton({
-	Name = "Collect",
-	Callback = function()
-		print("Collect clicked")
+TitanSection:CreateToggle({
+	Name = "Auto Titan",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoTitanEnabled = enabled
+		print("Auto Titan:", enabled)
 	end
 })
 
-Realm1General:CreateToggle({
-	Name = "Auto Farm",
+TitanSection:CreateDropdown({
+	Name = "Titan Upgrades",
+
+	Options = {
+		"HydraDamage",
+		"HydraAttackInterval",
+		"HydraTitanYield"
+	},
+
+	Multi = true,
+
+	Callback = function(selected)
+		SelectedTitanUpgrades = selected
+
+		print("Selected Titan upgrades:")
+
+		for _, upgradeName in ipairs(selected) do
+			print("-", upgradeName)
+		end
+	end
+})
+
+TitanSection:CreateSlider({
+	Name = "Action Interval",
+	Min = 0.25,
+	Max = 5,
+	Default = 1,
+	Increment = 0.25,
+
 	Callback = function(value)
-		print("Auto Farm:", value)
+		TitanInterval = value
+		print("Titan interval:", value)
 	end
 })
 
-local Realm2 = Window:CreateTab("Realm 2")
-local Realm2General = Realm2:CreateSection("General")
+task.spawn(function()
+	while true do
+		if AutoTitanEnabled and #SelectedTitanUpgrades > 0 then
+			for _, upgradeName in ipairs(SelectedTitanUpgrades) do
+				if not AutoTitanEnabled then
+					break
+				end
 
-Realm2General:CreateButton({
-	Name = "Realm 2 Test",
-	Callback = function()
-		print("Realm 2 button clicked")
+				print("Would process:", upgradeName)
+
+				task.wait(TitanInterval)
+			end
+		else
+			task.wait(0.1)
+		end
 	end
-})
-
-local Realm3 = Window:CreateTab("Realm 3")
-local Realm3General = Realm3:CreateSection("General")
-
-Realm3General:CreateButton({
-	Name = "Realm 3 Test",
-	Callback = function()
-		print("Realm 3 button clicked")
-	end
-})
+end)
