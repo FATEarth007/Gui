@@ -1,6 +1,10 @@
-local source = game:HttpGet(
-	"https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
-)
+local URL = "https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
+
+local source = game:HttpGet(URL)
+
+print("Downloaded size:", #source)
+print("Has CreateWindow:", string.find(source, "function Library:CreateWindow"))
+print("Has return Library:", string.find(source, "return Library"))
 
 local compiled, err = loadstring(source)
 
@@ -11,24 +15,24 @@ end
 
 local success, Library = pcall(compiled)
 
-print("Ran FateUI:", success)
+print("Executed:", success)
 print("Library:", Library)
 print("Library type:", typeof(Library))
 
 if not success then
-	warn("FateUI runtime error:", Library)
+	warn("Runtime error:", Library)
 	return
 end
+
+print("CreateWindow value:", Library and Library.CreateWindow)
 
 if typeof(Library) ~= "table" then
-	warn("FateUI did not return Library table")
+	warn("Library is not a table")
 	return
 end
 
-print("CreateWindow:", Library.CreateWindow)
-
 if typeof(Library.CreateWindow) ~= "function" then
-	warn("CreateWindow is missing")
+	warn("CreateWindow was not returned from the GitHub file")
 	return
 end
 
@@ -36,7 +40,7 @@ local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
-print("Window created")
+print("Window successfully created")
 
 -- =========================
 -- World 6
