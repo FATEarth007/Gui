@@ -546,253 +546,216 @@ function Library:CreateWindow(options)
 			-- Dropdown
 			-- =========================
 
-			function Section:CreateDropdown(dropdownOptions)
-				dropdownOptions = dropdownOptions or {}
+function Section:CreateDropdown(dropdownOptions)
+	dropdownOptions = dropdownOptions or {}
 
-				local name = dropdownOptions.Name or "Dropdown"
-				local options = dropdownOptions.Options or {}
-				local multi = dropdownOptions.Multi == true
+	local name = dropdownOptions.Name or "Dropdown"
+	local options = dropdownOptions.Options or {}
+	local multi = dropdownOptions.Multi == true
+	local callback = dropdownOptions.Callback or function() end
 
-				local callback =
-					dropdownOptions.Callback or function()
+	local selected = {}
+	local open = false
+	local optionButtons = {}
+
+	local dropdownFrame = Instance.new("Frame")
+	dropdownFrame.Name = name .. "Dropdown"
+	dropdownFrame.Size = UDim2.new(1, 0, 0, 38)
+	dropdownFrame.BackgroundColor3 = Theme.Element
+	dropdownFrame.BorderSizePixel = 0
+	dropdownFrame.ClipsDescendants = true
+	dropdownFrame.Parent = section
+
+	createCorner(dropdownFrame, 6)
+
+	local dropdownButton = Instance.new("TextButton")
+	dropdownButton.Name = "DropdownButton"
+	dropdownButton.Size = UDim2.new(1, 0, 0, 38)
+	dropdownButton.Position = UDim2.fromOffset(0, 0)
+	dropdownButton.BackgroundTransparency = 1
+	dropdownButton.Text = name .. " ▼"
+	dropdownButton.TextColor3 = Theme.Text
+	dropdownButton.TextSize = 14
+	dropdownButton.Font = Enum.Font.GothamMedium
+	dropdownButton.Parent = dropdownFrame
+
+	local optionsFrame = Instance.new("Frame")
+	optionsFrame.Name = "Options"
+	optionsFrame.Position = UDim2.fromOffset(0, 42)
+	optionsFrame.Size = UDim2.new(1, 0, 0, #options * 36)
+	optionsFrame.BackgroundTransparency = 1
+	optionsFrame.Visible = false
+	optionsFrame.Parent = dropdownFrame
+
+	local optionsLayout = Instance.new("UIListLayout")
+	optionsLayout.Padding = UDim.new(0, 4)
+	optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	optionsLayout.Parent = optionsFrame
+
+	local function updateTitle()
+		if #selected == 0 then
+			dropdownButton.Text =
+				name .. (open and " ▲" or " ▼")
+
+		elseif multi then
+			dropdownButton.Text =
+				name .. " (" .. #selected .. ")"
+				.. (open and " ▲" or " ▼")
+
+		else
+			dropdownButton.Text =
+				name .. ": " .. selected[1]
+				.. (open and " ▲" or " ▼")
+		end
+	end
+
+	local function fireCallback()
+		local copy = {}
+
+		for index, value in ipairs(selected) do
+			copy[index] = value
+		end
+
+		local success, err = pcall(callback, copy)
+
+		if not success then
+			warn("[FateUI Dropdown Error]", err)
+		end
+	end
+
+	local function updateSize()
+		if open then
+			dropdownFrame.Size = UDim2.new(
+				1,
+				0,
+				0,
+				42 + (#options * 36)
+			)
+
+			optionsFrame.Visible = true
+		else
+			dropdownFrame.Size = UDim2.new(
+				1,
+				0,
+				0,
+				38
+			)
+
+			optionsFrame.Visible = false
+		end
+
+		updateTitle()
+	end
+
+	for _, optionName in ipairs(options) do
+		local optionButton = Instance.new("TextButton")
+
+		optionButton.Name = tostring(optionName) .. "Option"
+		optionButton.Size = UDim2.new(1, 0, 0, 32)
+		optionButton.BackgroundColor3 = Theme.ElementHover
+		optionButton.BorderSizePixel = 0
+		optionButton.Text = tostring(optionName)
+		optionButton.TextColor3 = Theme.Text
+		optionButton.TextSize = 13
+		optionButton.Font = Enum.Font.GothamMedium
+		optionButton.Parent = optionsFrame
+
+		createCorner(optionButton, 5)
+
+		optionButtons[optionName] = optionButton
+
+		optionButton.MouseButton1Click:Connect(function()
+			if multi then
+				local foundIndex
+
+				for index, value in ipairs(selected) do
+					if value == optionName then
+						foundIndex = index
+						break
 					end
-
-				local selected = {}
-				local open = false
-
-				local dropdownFrame = Instance.new("Frame")
-				dropdownFrame.Name = name .. "Dropdown"
-				dropdownFrame.Size = UDim2.new(1, 0, 0, 0)
-				dropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
-				dropdownFrame.BackgroundColor3 = Theme.Element
-				dropdownFrame.BorderSizePixel = 0
-				dropdownFrame.Parent = section
-
-				createCorner(dropdownFrame, 6)
-
-				local dropdownLayout = Instance.new("UIListLayout")
-				dropdownLayout.Padding = UDim.new(0, 4)
-				dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				dropdownLayout.Parent = dropdownFrame
-
-				local dropdownButton = Instance.new("TextButton")
-				dropdownButton.Name = "DropdownButton"
-				dropdownButton.Size = UDim2.new(1, 0, 0, 38)
-				dropdownButton.BackgroundTransparency = 1
-				dropdownButton.Text = name .. " ▼"
-				dropdownButton.TextColor3 = Theme.Text
-				dropdownButton.TextSize = 14
-				dropdownButton.Font = Enum.Font.GothamMedium
-				dropdownButton.Parent = dropdownFrame
-
-				local optionsFrame = Instance.new("Frame")
-				optionsFrame.Name = "Options"
-				optionsFrame.Size = UDim2.new(1, 0, 0, 0)
-				optionsFrame.AutomaticSize = Enum.AutomaticSize.Y
-				optionsFrame.BackgroundTransparency = 1
-				optionsFrame.Visible = false
-				optionsFrame.Parent = dropdownFrame
-
-				local optionsLayout = Instance.new("UIListLayout")
-				optionsLayout.Padding = UDim.new(0, 4)
-				optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				optionsLayout.Parent = optionsFrame
-
-				local function getDisplayText()
-					if #selected == 0 then
-						return name
-					end
-
-					if not multi then
-						return name .. ": " .. selected[1]
-					end
-
-					return name .. " (" .. #selected .. ")"
 				end
 
-				local function updateHeader()
-					if open then
-						dropdownButton.Text =
-							getDisplayText() .. " ▲"
-					else
-						dropdownButton.Text =
-							getDisplayText() .. " ▼"
-					end
-				end
-
-				local function fireCallback()
-					local copiedSelection = {}
-
-					for index, value in ipairs(selected) do
-						copiedSelection[index] = value
-					end
-
-					local success, err =
-						pcall(callback, copiedSelection)
-
-					if not success then
-						warn(
-							"[FateUI Dropdown Error]",
-							err
-						)
-					end
-				end
-
-				local optionButtons = {}
-
-				for _, optionName in ipairs(options) do
-					local optionButton =
-						Instance.new("TextButton")
-
-					optionButton.Name =
-						tostring(optionName) .. "Option"
-
-					optionButton.Size =
-						UDim2.new(1, 0, 0, 32)
+				if foundIndex then
+					table.remove(selected, foundIndex)
 
 					optionButton.BackgroundColor3 =
 						Theme.ElementHover
+				else
+					table.insert(selected, optionName)
 
-					optionButton.BorderSizePixel = 0
-					optionButton.Text = tostring(optionName)
-					optionButton.TextColor3 = Theme.Text
-					optionButton.TextSize = 13
-					optionButton.Font =
-						Enum.Font.GothamMedium
-
-					optionButton.Parent = optionsFrame
-
-					createCorner(optionButton, 5)
-
-					optionButtons[optionName] = optionButton
-
-					optionButton.MouseButton1Click:Connect(
-						function()
-
-							if multi then
-								local foundIndex
-
-								for index, value
-									in ipairs(selected) do
-
-									if value == optionName then
-										foundIndex = index
-										break
-									end
-								end
-
-								if foundIndex then
-									table.remove(
-										selected,
-										foundIndex
-									)
-
-									optionButton.BackgroundColor3 =
-										Theme.ElementHover
-								else
-									table.insert(
-										selected,
-										optionName
-									)
-
-									optionButton.BackgroundColor3 =
-										Theme.Accent
-								end
-							else
-								selected = {optionName}
-
-								for _, otherButton
-									in pairs(optionButtons) do
-
-									otherButton.BackgroundColor3 =
-										Theme.ElementHover
-								end
-
-								optionButton.BackgroundColor3 =
-									Theme.Accent
-
-								open = false
-								optionsFrame.Visible = false
-							end
-
-							updateHeader()
-							fireCallback()
-						end
-					)
+					optionButton.BackgroundColor3 =
+						Theme.Accent
 				end
 
-				dropdownButton.MouseButton1Click:Connect(
-					function()
+			else
+				selected = {optionName}
 
-						open = not open
-						optionsFrame.Visible = open
-
-						updateHeader()
-					end
-				)
-
-				updateHeader()
-
-				local Dropdown = {}
-
-				function Dropdown:Get()
-					local copy = {}
-
-					for index, value in ipairs(selected) do
-						copy[index] = value
-					end
-
-					return copy
+				for _, button in pairs(optionButtons) do
+					button.BackgroundColor3 =
+						Theme.ElementHover
 				end
 
-				function Dropdown:Set(values)
-					selected = {}
+				optionButton.BackgroundColor3 =
+					Theme.Accent
 
-					for _, button in pairs(optionButtons) do
-						button.BackgroundColor3 =
-							Theme.ElementHover
-					end
-
-					if multi then
-						if typeof(values) == "table" then
-							for _, value in ipairs(values) do
-								if optionButtons[value] then
-									table.insert(
-										selected,
-										value
-									)
-
-									optionButtons[value]
-										.BackgroundColor3 =
-										Theme.Accent
-								end
-							end
-						end
-					else
-						local value = values
-
-						if typeof(values) == "table" then
-							value = values[1]
-						end
-
-						if optionButtons[value] then
-							selected = {value}
-
-							optionButtons[value]
-								.BackgroundColor3 =
-								Theme.Accent
-						end
-					end
-
-					updateHeader()
-					fireCallback()
-				end
-
-				Dropdown.Instance = dropdownFrame
-
-				return Dropdown
+				open = false
+				updateSize()
 			end
 
+			updateTitle()
+			fireCallback()
+		end)
+	end
+
+	dropdownButton.MouseButton1Click:Connect(function()
+		open = not open
+		updateSize()
+	end)
+
+	updateSize()
+
+	local Dropdown = {}
+
+	function Dropdown:Get()
+		local copy = {}
+
+		for index, value in ipairs(selected) do
+			copy[index] = value
+		end
+
+		return copy
+	end
+
+	function Dropdown:Set(values)
+		selected = {}
+
+		for _, button in pairs(optionButtons) do
+			button.BackgroundColor3 =
+				Theme.ElementHover
+		end
+
+		if multi and typeof(values) == "table" then
+
+			for _, value in ipairs(values) do
+				if optionButtons[value] then
+
+					table.insert(selected, value)
+
+					optionButtons[value]
+						.BackgroundColor3 =
+						Theme.Accent
+				end
+			end
+		end
+
+		updateTitle()
+		fireCallback()
+	end
+
+	Dropdown.Instance = dropdownFrame
+
+	return Dropdown
+end
 			-- =========================
 			-- Slider
 			-- =========================
