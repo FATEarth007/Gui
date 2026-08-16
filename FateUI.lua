@@ -284,108 +284,456 @@ function Library:CreateWindow(options)
 
 			Section.Frame = section
 
-			function Section:CreateButton(buttonOptions)
-				buttonOptions = buttonOptions or {}
+function Tab:CreateSection(sectionName)
+	local section = Instance.new("Frame")
+	section.Name = sectionName .. "Section"
+	section.Size = UDim2.new(1, -4, 0, 0)
+	section.AutomaticSize = Enum.AutomaticSize.Y
+	section.BackgroundColor3 = Theme.Section
+	section.BorderSizePixel = 0
+	section.Parent = page
 
-				local callback = buttonOptions.Callback or function() end
+	createCorner(section, 7)
+	createPadding(section, 10)
 
-				local button = Instance.new("TextButton")
-				button.Name = buttonOptions.Name or "Button"
-				button.Size = UDim2.new(1, 0, 0, 38)
-				button.BackgroundColor3 = Theme.Element
-				button.BorderSizePixel = 0
-				button.Text = buttonOptions.Name or "Button"
-				button.TextColor3 = Theme.Text
-				button.TextSize = 14
-				button.Font = Enum.Font.GothamMedium
-				button.Parent = section
+	local sectionLayout = Instance.new("UIListLayout")
+	sectionLayout.Padding = UDim.new(0, 8)
+	sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	sectionLayout.Parent = section
 
-				createCorner(button, 6)
+	local sectionTitle = Instance.new("TextLabel")
+	sectionTitle.Name = "SectionTitle"
+	sectionTitle.Size = UDim2.new(1, 0, 0, 24)
+	sectionTitle.BackgroundTransparency = 1
+	sectionTitle.Text = sectionName
+	sectionTitle.TextColor3 = Theme.Text
+	sectionTitle.TextSize = 14
+	sectionTitle.Font = Enum.Font.GothamBold
+	sectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+	sectionTitle.Parent = section
 
-				button.MouseEnter:Connect(function()
-					button.BackgroundColor3 = Theme.ElementHover
-				end)
+	local Section = {}
 
-				button.MouseLeave:Connect(function()
-					button.BackgroundColor3 = Theme.Element
-				end)
+	Section.Frame = section
 
-				button.MouseButton1Click:Connect(function()
-					local success, err = pcall(callback)
+	-- =========================
+	-- Button
+	-- =========================
 
-					if not success then
-						warn("[FateUI Button Error]", err)
-					end
-				end)
+	function Section:CreateButton(buttonOptions)
+		buttonOptions = buttonOptions or {}
 
-				return button
+		local callback = buttonOptions.Callback or function() end
+
+		local button = Instance.new("TextButton")
+		button.Name = buttonOptions.Name or "Button"
+		button.Size = UDim2.new(1, 0, 0, 38)
+		button.BackgroundColor3 = Theme.Element
+		button.BorderSizePixel = 0
+		button.Text = buttonOptions.Name or "Button"
+		button.TextColor3 = Theme.Text
+		button.TextSize = 14
+		button.Font = Enum.Font.GothamMedium
+		button.Parent = section
+
+		createCorner(button, 6)
+
+		button.MouseEnter:Connect(function()
+			button.BackgroundColor3 = Theme.ElementHover
+		end)
+
+		button.MouseLeave:Connect(function()
+			button.BackgroundColor3 = Theme.Element
+		end)
+
+		button.MouseButton1Click:Connect(function()
+			local success, err = pcall(callback)
+
+			if not success then
+				warn("[FateUI Button Error]", err)
 			end
+		end)
 
-			function Section:CreateToggle(toggleOptions)
-				toggleOptions = toggleOptions or {}
+		return button
+	end
 
-				local callback = toggleOptions.Callback or function() end
-				local enabled = toggleOptions.Default == true
+	-- =========================
+	-- Toggle
+	-- =========================
 
-				local toggleButton = Instance.new("TextButton")
-				toggleButton.Name = toggleOptions.Name or "Toggle"
-				toggleButton.Size = UDim2.new(1, 0, 0, 38)
-				toggleButton.BackgroundColor3 = Theme.Element
-				toggleButton.BorderSizePixel = 0
-				toggleButton.Text = ""
-				toggleButton.Parent = section
+	function Section:CreateToggle(toggleOptions)
+		toggleOptions = toggleOptions or {}
 
-				createCorner(toggleButton, 6)
+		local callback = toggleOptions.Callback or function() end
+		local enabled = toggleOptions.Default == true
 
-				local label = Instance.new("TextLabel")
-				label.Size = UDim2.new(1, -58, 1, 0)
-				label.Position = UDim2.fromOffset(12, 0)
-				label.BackgroundTransparency = 1
-				label.Text = toggleOptions.Name or "Toggle"
-				label.TextColor3 = Theme.Text
-				label.TextSize = 14
-				label.Font = Enum.Font.GothamMedium
-				label.TextXAlignment = Enum.TextXAlignment.Left
-				label.Parent = toggleButton
+		local toggleButton = Instance.new("TextButton")
+		toggleButton.Name = toggleOptions.Name or "Toggle"
+		toggleButton.Size = UDim2.new(1, 0, 0, 38)
+		toggleButton.BackgroundColor3 = Theme.Element
+		toggleButton.BorderSizePixel = 0
+		toggleButton.Text = ""
+		toggleButton.Parent = section
 
-				local indicator = Instance.new("Frame")
-				indicator.Size = UDim2.fromOffset(34, 18)
-				indicator.Position = UDim2.new(1, -44, 0.5, -9)
-				indicator.BorderSizePixel = 0
-				indicator.Parent = toggleButton
+		createCorner(toggleButton, 6)
 
-				createCorner(indicator, 9)
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, -58, 1, 0)
+		label.Position = UDim2.fromOffset(12, 0)
+		label.BackgroundTransparency = 1
+		label.Text = toggleOptions.Name or "Toggle"
+		label.TextColor3 = Theme.Text
+		label.TextSize = 14
+		label.Font = Enum.Font.GothamMedium
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = toggleButton
 
-				local knob = Instance.new("Frame")
-				knob.Size = UDim2.fromOffset(14, 14)
+		local indicator = Instance.new("Frame")
+		indicator.Size = UDim2.fromOffset(34, 18)
+		indicator.Position = UDim2.new(1, -44, 0.5, -9)
+		indicator.BorderSizePixel = 0
+		indicator.Parent = toggleButton
+
+		createCorner(indicator, 9)
+
+		local knob = Instance.new("Frame")
+		knob.Size = UDim2.fromOffset(14, 14)
+		knob.Position = UDim2.fromOffset(2, 2)
+		knob.BackgroundColor3 = Theme.Text
+		knob.BorderSizePixel = 0
+		knob.Parent = indicator
+
+		createCorner(knob, 7)
+
+		local function update()
+			if enabled then
+				indicator.BackgroundColor3 = Theme.Accent
+				knob.Position = UDim2.fromOffset(18, 2)
+			else
+				indicator.BackgroundColor3 = Color3.fromRGB(70, 70, 78)
 				knob.Position = UDim2.fromOffset(2, 2)
-				knob.BackgroundColor3 = Theme.Text
-				knob.BorderSizePixel = 0
-				knob.Parent = indicator
+			end
+		end
 
-				createCorner(knob, 7)
+		local function setValue(value, fireCallback)
+			enabled = value == true
+			update()
 
-				local function update()
-					indicator.BackgroundColor3 =
-						enabled and Theme.Accent or Color3.fromRGB(70, 70, 78)
+			if fireCallback then
+				local success, err = pcall(callback, enabled)
 
-					knob.Position =
-						enabled and UDim2.fromOffset(18, 2)
-						or UDim2.fromOffset(2, 2)
+				if not success then
+					warn("[FateUI Toggle Error]", err)
 				end
+			end
+		end
 
-				local function setValue(value, fireCallback)
-					enabled = value == true
-					update()
+		toggleButton.MouseButton1Click:Connect(function()
+			setValue(not enabled, true)
+		end)
 
-					if fireCallback then
-						local success, err = pcall(callback, enabled)
+		update()
 
-						if not success then
-							warn("[FateUI Toggle Error]", err)
+		local Toggle = {}
+
+		function Toggle:Set(value)
+			setValue(value, true)
+		end
+
+		function Toggle:Get()
+			return enabled
+		end
+
+		return Toggle
+	end
+
+	-- =========================
+	-- Dropdown
+	-- =========================
+
+	function Section:CreateDropdown(dropdownOptions)
+		dropdownOptions = dropdownOptions or {}
+
+		local name = dropdownOptions.Name or "Dropdown"
+		local options = dropdownOptions.Options or {}
+		local multi = dropdownOptions.Multi == true
+		local callback = dropdownOptions.Callback or function() end
+
+		local selected = {}
+		local open = false
+
+		local dropdownFrame = Instance.new("Frame")
+		dropdownFrame.Name = name .. "Dropdown"
+		dropdownFrame.Size = UDim2.new(1, 0, 0, 38)
+		dropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
+		dropdownFrame.BackgroundColor3 = Theme.Element
+		dropdownFrame.BorderSizePixel = 0
+		dropdownFrame.Parent = section
+
+		createCorner(dropdownFrame, 6)
+
+		local dropdownLayout = Instance.new("UIListLayout")
+		dropdownLayout.Padding = UDim.new(0, 4)
+		dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		dropdownLayout.Parent = dropdownFrame
+
+		local dropdownButton = Instance.new("TextButton")
+		dropdownButton.Name = "DropdownButton"
+		dropdownButton.Size = UDim2.new(1, 0, 0, 38)
+		dropdownButton.BackgroundTransparency = 1
+		dropdownButton.Text = name .. " ▼"
+		dropdownButton.TextColor3 = Theme.Text
+		dropdownButton.TextSize = 14
+		dropdownButton.Font = Enum.Font.GothamMedium
+		dropdownButton.Parent = dropdownFrame
+
+		local optionsFrame = Instance.new("Frame")
+		optionsFrame.Name = "Options"
+		optionsFrame.Size = UDim2.new(1, 0, 0, 0)
+		optionsFrame.AutomaticSize = Enum.AutomaticSize.Y
+		optionsFrame.BackgroundTransparency = 1
+		optionsFrame.Visible = false
+		optionsFrame.Parent = dropdownFrame
+
+		local optionsLayout = Instance.new("UIListLayout")
+		optionsLayout.Padding = UDim.new(0, 4)
+		optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		optionsLayout.Parent = optionsFrame
+
+		local function fireCallback()
+			local success, err = pcall(callback, selected)
+
+			if not success then
+				warn("[FateUI Dropdown Error]", err)
+			end
+		end
+
+		for _, optionName in ipairs(options) do
+			local optionButton = Instance.new("TextButton")
+			optionButton.Size = UDim2.new(1, 0, 0, 32)
+			optionButton.BackgroundColor3 = Theme.ElementHover
+			optionButton.BorderSizePixel = 0
+			optionButton.Text = optionName
+			optionButton.TextColor3 = Theme.Text
+			optionButton.TextSize = 13
+			optionButton.Font = Enum.Font.GothamMedium
+			optionButton.Parent = optionsFrame
+
+			createCorner(optionButton, 5)
+
+			optionButton.MouseButton1Click:Connect(function()
+				if multi then
+					local foundIndex = nil
+
+					for index, value in ipairs(selected) do
+						if value == optionName then
+							foundIndex = index
+							break
 						end
 					end
+
+					if foundIndex then
+						table.remove(selected, foundIndex)
+						optionButton.BackgroundColor3 = Theme.ElementHover
+					else
+						table.insert(selected, optionName)
+						optionButton.BackgroundColor3 = Theme.Accent
+					end
+				else
+					selected = {optionName}
+
+					for _, child in ipairs(optionsFrame:GetChildren()) do
+						if child:IsA("TextButton") then
+							child.BackgroundColor3 = Theme.ElementHover
+						end
+					end
+
+					optionButton.BackgroundColor3 = Theme.Accent
+
+					open = false
+					optionsFrame.Visible = false
+					dropdownButton.Text = name .. ": " .. optionName
 				end
+
+				fireCallback()
+			end)
+		end
+
+		dropdownButton.MouseButton1Click:Connect(function()
+			open = not open
+			optionsFrame.Visible = open
+
+			if open then
+				dropdownButton.Text = name .. " ▲"
+			else
+				dropdownButton.Text = name .. " ▼"
+			end
+		end)
+
+		local Dropdown = {}
+
+		function Dropdown:Get()
+			return selected
+		end
+
+		return Dropdown
+	end
+
+	-- =========================
+	-- Slider
+	-- =========================
+
+	function Section:CreateSlider(sliderOptions)
+		sliderOptions = sliderOptions or {}
+
+		local name = sliderOptions.Name or "Slider"
+		local min = sliderOptions.Min or 0
+		local max = sliderOptions.Max or 100
+		local increment = sliderOptions.Increment or 1
+		local value = sliderOptions.Default or min
+		local callback = sliderOptions.Callback or function() end
+
+		value = math.clamp(value, min, max)
+
+		local sliderFrame = Instance.new("Frame")
+		sliderFrame.Name = name .. "Slider"
+		sliderFrame.Size = UDim2.new(1, 0, 0, 56)
+		sliderFrame.BackgroundColor3 = Theme.Element
+		sliderFrame.BorderSizePixel = 0
+		sliderFrame.Parent = section
+
+		createCorner(sliderFrame, 6)
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, -70, 0, 26)
+		label.Position = UDim2.fromOffset(10, 2)
+		label.BackgroundTransparency = 1
+		label.Text = name
+		label.TextColor3 = Theme.Text
+		label.TextSize = 14
+		label.Font = Enum.Font.GothamMedium
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = sliderFrame
+
+		local valueLabel = Instance.new("TextLabel")
+		valueLabel.Size = UDim2.fromOffset(60, 26)
+		valueLabel.Position = UDim2.new(1, -70, 0, 2)
+		valueLabel.BackgroundTransparency = 1
+		valueLabel.TextColor3 = Theme.Text
+		valueLabel.TextSize = 13
+		valueLabel.Font = Enum.Font.GothamMedium
+		valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+		valueLabel.Parent = sliderFrame
+
+		local track = Instance.new("Frame")
+		track.Size = UDim2.new(1, -20, 0, 6)
+		track.Position = UDim2.new(0, 10, 0, 38)
+		track.BackgroundColor3 = Color3.fromRGB(60, 60, 68)
+		track.BorderSizePixel = 0
+		track.Parent = sliderFrame
+
+		createCorner(track, 3)
+
+		local fill = Instance.new("Frame")
+		fill.Size = UDim2.new(0, 0, 1, 0)
+		fill.BackgroundColor3 = Theme.Accent
+		fill.BorderSizePixel = 0
+		fill.Parent = track
+
+		createCorner(fill, 3)
+
+		local dragging = false
+
+		local function roundToIncrement(number)
+			return math.floor((number / increment) + 0.5) * increment
+		end
+
+		local function updateVisual()
+			local percent = (value - min) / (max - min)
+
+			fill.Size = UDim2.new(percent, 0, 1, 0)
+			valueLabel.Text = tostring(value)
+		end
+
+		local function setValue(newValue, fireCallback)
+			newValue = math.clamp(newValue, min, max)
+			newValue = roundToIncrement(newValue)
+			newValue = math.clamp(newValue, min, max)
+
+			value = newValue
+
+			updateVisual()
+
+			if fireCallback then
+				local success, err = pcall(callback, value)
+
+				if not success then
+					warn("[FateUI Slider Error]", err)
+				end
+			end
+		end
+
+		local function updateFromMouse(input)
+			local mouseX = input.Position.X
+			local startX = track.AbsolutePosition.X
+			local width = track.AbsoluteSize.X
+
+			local percent = math.clamp(
+				(mouseX - startX) / width,
+				0,
+				1
+			)
+
+			local newValue = min + ((max - min) * percent)
+
+			setValue(newValue, true)
+		end
+
+		track.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+				or input.UserInputType == Enum.UserInputType.Touch then
+
+				dragging = true
+				updateFromMouse(input)
+			end
+		end)
+
+		UserInputService.InputChanged:Connect(function(input)
+			if dragging then
+				if input.UserInputType == Enum.UserInputType.MouseMovement
+					or input.UserInputType == Enum.UserInputType.Touch then
+
+					updateFromMouse(input)
+				end
+			end
+		end)
+
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+				or input.UserInputType == Enum.UserInputType.Touch then
+
+				dragging = false
+			end
+		end)
+
+		setValue(value, false)
+
+		local Slider = {}
+
+		function Slider:Set(newValue)
+			setValue(newValue, true)
+		end
+
+		function Slider:Get()
+			return value
+		end
+
+		return Slider
+	end
+
+	-- IMPORTANT:
+	return Section
+end
 
 				toggleButton.MouseButton1Click:Connect(function()
 					setValue(not enabled, true)
