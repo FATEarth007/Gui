@@ -101,7 +101,8 @@ TitanSection:CreateDropdown({
 	Options = {
 		"HydraTianYield",
 		"HydraAttackInterval",
-		"HydraDamage"
+		"HydraDamage",
+		"HydraQiBoost"
 	},
 
 	Multi = true,
