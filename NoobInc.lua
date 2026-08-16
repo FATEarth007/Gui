@@ -349,35 +349,27 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-
 	while true do
 
-		-- Auto Titan is OFF
+		-- Toggle OFF = do nothing
 		if not AutoMasteryEnabled then
 			task.wait(0.1)
 			continue
 		end
 
-		-- Nothing selected
+		-- Toggle ON, but nothing selected = do nothing
 		if #SelectedMasteryUpgrades == 0 then
 			task.wait(0.1)
 			continue
 		end
 
-		-- Process selected upgrades
-		for _, upgradeName
-			in ipairs(SelectedMasteryUpgrades) do
-
-			-- Check toggle again
+		-- Toggle ON + selected items = run them
+		for _, upgradeName in ipairs(SelectedMasteryUpgrades) do
 			if not AutoMasteryEnabled then
 				break
 			end
 
-			PurchaseMasteryUpgrade(
-				upgradeName
-			)
-
-			-- Random 0.4 - 1.0 second delay
+			PurchaseMasteryUpgrade(upgradeName)
 			HumanDelay()
 		end
 	end
