@@ -13,9 +13,12 @@ local ConfigFile = "FatE_NoobInc_Config.json"
 local Config = {
 	AutoTitan = false,
 	AutoFlora = false,
+	AutoMastery = false,
 
+local Config = {
 	TitanUpgrades = {},
-	FloraUpgrades = {}
+	FloraUpgrades = {},
+	MasteryUpgrades = {}
 }
 
 local function SaveConfig()
@@ -62,6 +65,9 @@ local PurchaseHydraUpgrade =
 local PurchaseUpgrade =
 	ReplicatedStorage.RemoteEvents.PurchaseUpgrade
 
+local PurchaseHydraMastery =
+	ReplicatedStorage.RemoteEvents.PurchaseHydraMastery
+
 
 -- ==========================================
 -- Human Delay
@@ -95,7 +101,7 @@ local World6 = Window:CreateTab("World 6")
 
 local TitanSection = World6:CreateSection("Titan")
 local FloraSection = World6:CreateSection("Flora")
-local FloraSection = World6:CreateSection("Mastery")
+local MasterySection = World6:CreateSection("Mastery")
 
 -- ==========================================
 -- Titan Variables
@@ -103,6 +109,7 @@ local FloraSection = World6:CreateSection("Mastery")
 
 local AutoTitanEnabled = false
 local AutoFloraEnabled = false
+local AutoMasteryEnabled = false
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -111,7 +118,7 @@ local SelectedFloraUpgrades =
 	Config.FloraUpgrades or {}
 
 local SelectedMasteryUpgrades =
-	Config.MasteryUpgrades or {}    
+	Config.MasteryUpgrades or {} 
 
 -- ==========================================
 -- Auto Toggles
