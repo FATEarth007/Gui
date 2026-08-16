@@ -12,6 +12,21 @@ local compiled, err = loadstring(source)
 print("compiled =", compiled)
 print("error =", err)
 
+if not compiled then
+	warn("FateUI failed to compile:", err)
+	return
+end
+
+local Library = compiled()
+
+if typeof(Library) ~= "table" then
+	warn("FateUI did not return a Library table")
+	return
+end
+
+print("Library =", Library)
+print("CreateWindow =", Library.CreateWindow)
+
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
