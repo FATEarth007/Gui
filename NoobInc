@@ -2,16 +2,25 @@ local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
 ))()
 
+print("1 - Library loaded")
+
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
+
+print("2 - Window created")
 
 -- =========================
 -- World 6
 -- =========================
 
 local World6 = Window:CreateTab("World 6")
+
+print("3 - World 6 tab created")
+
 local TitanSection = World6:CreateSection("Titan")
+
+print("4 - Titan section created")
 
 -- =========================
 -- Titan Settings
@@ -21,7 +30,7 @@ local AutoTitanEnabled = false
 local SelectedTitanUpgrades = {}
 local TitanInterval = 1
 
--- Auto Titan
+-- Auto Titan Toggle
 
 TitanSection:CreateToggle({
 	Name = "Auto Titan",
@@ -33,7 +42,9 @@ TitanSection:CreateToggle({
 	end
 })
 
--- Titan upgrade selection
+print("5 - Auto Titan toggle created")
+
+-- Titan Upgrade Dropdown
 
 TitanSection:CreateDropdown({
 	Name = "Titan Upgrades",
@@ -57,7 +68,9 @@ TitanSection:CreateDropdown({
 	end
 })
 
--- Interval control
+print("6 - Titan dropdown created")
+
+-- Action Interval Slider
 
 TitanSection:CreateSlider({
 	Name = "Action Interval",
@@ -73,6 +86,8 @@ TitanSection:CreateSlider({
 	end
 })
 
+print("7 - Titan slider created")
+
 -- =========================
 -- Titan Loop
 -- =========================
@@ -86,9 +101,12 @@ task.spawn(function()
 					break
 				end
 
-				print("Would process:", upgradeName)
-
-				-- Your own game's action would eventually go here.
+				print(
+					"Would process:",
+					upgradeName,
+					"Interval:",
+					TitanInterval
+				)
 
 				task.wait(TitanInterval)
 			end
@@ -98,3 +116,5 @@ task.spawn(function()
 		end
 	end
 end)
+
+print("8 - Titan loop started")
