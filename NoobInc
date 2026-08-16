@@ -1,8 +1,16 @@
-local Library = loadstring(game:HttpGet(
-	"https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
-))()
+print("loadstring =", loadstring)
+print("HttpGet =", game.HttpGet)
 
-print("1 - Library loaded")
+local source = game:HttpGet(
+	"https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
+)
+
+print("downloaded", #source)
+
+local compiled, err = loadstring(source)
+
+print("compiled =", compiled)
+print("error =", err)
 
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
