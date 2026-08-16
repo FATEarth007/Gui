@@ -46,7 +46,7 @@ local World6 = Window:CreateTab("World 6")
 -- ==========================================
 
 local TitanSection = World6:CreateSection("Titan")
-local TitanSection = World6:CreateSection("Flora")
+local FloraSection = World6:CreateSection("Flora")
 
 -- ==========================================
 -- Titan Variables
