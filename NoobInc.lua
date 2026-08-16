@@ -2,6 +2,17 @@ local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
 ))()
 
+local function HumanDelay(minDelay, maxDelay)
+	minDelay = minDelay or 0.4
+	maxDelay = maxDelay or 1
+
+	local delay = minDelay + math.random() * (maxDelay - minDelay)
+
+	task.wait(delay)
+
+	return delay
+end
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PurchaseHydraUpgrade =
@@ -48,7 +59,7 @@ task.spawn(function()
 				warn("Hydra upgrade failed:", result)
 			end
 
-			task.wait(1)
+			HumanDelay(0.4, 1)
 		else
 			task.wait(0.1)
 		end
