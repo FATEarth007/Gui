@@ -95,6 +95,7 @@ local World6 = Window:CreateTab("World 6")
 
 local TitanSection = World6:CreateSection("Titan")
 local FloraSection = World6:CreateSection("Flora")
+local FloraSection = World6:CreateSection("Mastery")
 
 -- ==========================================
 -- Titan Variables
@@ -108,6 +109,9 @@ local SelectedTitanUpgrades =
 
 local SelectedFloraUpgrades =
 	Config.FloraUpgrades or {}
+
+local SelectedMasteryUpgrades =
+	Config.MasteryUpgrades or {}    
 
 -- ==========================================
 -- Auto Toggles
@@ -128,6 +132,15 @@ local AutoFloraToggle = FloraSection:CreateToggle({
 
 	Callback = function(enabled)
 		AutoFloraEnabled = enabled
+	end
+})
+
+local AutoMasteryToggle = MasterySection:CreateToggle({
+	Name = "Auto Mastery",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoMasteryEnabled = enabled
 	end
 })
 
@@ -171,12 +184,32 @@ local FloraDropdown = FloraSection:CreateDropdown({
 end
 })
 
+local MasteryDropdown = MasterySection:CreateDropdown({
+	Name = "Auto Mastery Upgrades",
+
+	Options = {
+		"relic_strength"
+	},
+
+	Multi = true,
+
+	Callback = function(selected)
+		SelectedMasteryUpgrades = selected
+		Config.MasteryUpgrades = selected
+		SaveConfig()
+end
+})
+
 TitanDropdown:Set(
 	SelectedTitanUpgrades
 )
 
 FloraDropdown:Set(
 	SelectedFloraUpgrades
+)
+
+MasteryDropdown:Set(
+	SelectedMasteryUpgrades
 )
 
 -- ==========================================
@@ -218,6 +251,24 @@ local function PurchaseFloraUpgrade(upgradeName)
 	if not success then
 		warn(
 			"[Auto Flora] Failed:", upgradeName, result)
+	end
+end
+
+local function PurchaseMasteryUpgrade(upgradeName)
+	local args = {
+		[1] = upgradeName,
+		[2] = false
+	}
+
+	local success, result = pcall(function()
+		PurchaseHydraMastery:InvokeServer(
+			unpack(args)
+		)
+	end)
+
+	if not success then
+		warn(
+			"[Auto Mastery] Failed:", upgradeName, result)
 	end
 end
 
@@ -286,6 +337,41 @@ task.spawn(function()
 			end
 
 			PurchaseFloraUpgrade(
+				upgradeName
+			)
+
+			-- Random 0.4 - 1.0 second delay
+			HumanDelay()
+		end
+	end
+end)
+
+task.spawn(function()
+
+	while true do
+
+		-- Auto Titan is OFF
+		if not AutoMasteryEnabled then
+			task.wait(0.1)
+			continue
+		end
+
+		-- Nothing selected
+		if #SelectedMasteryUpgrades == 0 then
+			task.wait(0.1)
+			continue
+		end
+
+		-- Process selected upgrades
+		for _, upgradeName
+			in ipairs(SelectedMasteryUpgrades) do
+
+			-- Check toggle again
+			if not AutoMasteryEnabled then
+				break
+			end
+
+			PurchaseMasteryUpgrade(
 				upgradeName
 			)
 
