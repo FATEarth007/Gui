@@ -366,6 +366,6 @@ local TianMarkPress =
 
 if TianMarkPress then
 	TianMarkPress.OnClientEvent:Connect(function(...)
-		-- Consume event so the queue doesn't fill.
+		print("[TianMarkPress]", ...)
 	end)
 end
