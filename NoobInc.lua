@@ -81,7 +81,7 @@ FloraSection:CreateToggle({
 	Default = false,
 
 	Callback = function(enabled)
-		AutoTitanEnabled = enabled
+		AutoFloraEnabled = enabled
 
 		print(
 			"[Auto Flora]",
