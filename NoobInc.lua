@@ -100,8 +100,8 @@ local FloraSection = World6:CreateSection("Flora")
 -- Titan Variables
 -- ==========================================
 
-local AutoTitanEnabled = Config.AutoTitan or false
-local AutoFloraEnabled = Config.AutoFlora or false
+local AutoTitanEnabled = false
+local AutoFloraEnabled = false
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -115,25 +115,19 @@ local SelectedFloraUpgrades =
 
 local AutoTitanToggle = TitanSection:CreateToggle({
 	Name = "Auto Titan",
-	Default = AutoTitanEnabled,
+	Default = false,
 
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
-
-		Config.AutoTitan = enabled
-		SaveConfig()
 	end
 })
 
 local AutoFloraToggle = FloraSection:CreateToggle({
 	Name = "Auto Flora",
-	Default = AutoFloraEnabled,
+	Default = false,
 
 	Callback = function(enabled)
 		AutoFloraEnabled = enabled
-
-		Config.AutoFlora = enabled
-		SaveConfig()
 	end
 })
 
@@ -155,10 +149,9 @@ local TitanDropdown = TitanSection:CreateDropdown({
 
 	Callback = function(selected)
 		SelectedTitanUpgrades = selected
-
 		Config.TitanUpgrades = selected
 		SaveConfig()
-	end
+end
 })
 
 local FloraDropdown = FloraSection:CreateDropdown({
@@ -173,10 +166,9 @@ local FloraDropdown = FloraSection:CreateDropdown({
 
 	Callback = function(selected)
 		SelectedFloraUpgrades = selected
-
 		Config.FloraUpgrades = selected
 		SaveConfig()
-	end
+end
 })
 
 TitanDropdown:Set(
