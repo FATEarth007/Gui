@@ -11,11 +11,6 @@ local HttpService = game:GetService("HttpService")
 local ConfigFile = "FatE_NoobInc_Config.json"
 
 local Config = {
-	AutoTitan = false,
-	AutoFlora = false,
-	AutoMastery = false,
-
-local Config = {
 	TitanUpgrades = {},
 	FloraUpgrades = {},
 	MasteryUpgrades = {}
