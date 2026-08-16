@@ -146,5 +146,3 @@ task.spawn(function()
 end)
 
 print("8 - Titan loop started")
-
-return Library
