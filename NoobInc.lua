@@ -76,7 +76,6 @@ TitanSection:CreateToggle({
 	end
 })
 
-
 FloraSection:CreateToggle({
 	Name = "Auto Flora",
 	Default = false,
