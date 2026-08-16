@@ -1,56 +1,33 @@
--- ==========================================
--- FatE Hub - Noob Incremental
--- ==========================================
-
--- Load FateUI
 local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
 ))()
-
--- ==========================================
--- Window
--- ==========================================
 
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
--- ==========================================
 -- World 6
--- ==========================================
-
 local World6 = Window:CreateTab("World 6")
 
--- ==========================================
 -- Titan Section
--- ==========================================
-
 local TitanSection = World6:CreateSection("Titan")
 
--- Values used by Auto Titan
 local AutoTitanEnabled = false
 local SelectedTitanUpgrades = {}
 local TitanInterval = 1
 
--- ==========================================
--- Auto Titan Toggle
--- ==========================================
-
+-- Auto Titan
 TitanSection:CreateToggle({
 	Name = "Auto Titan",
 	Default = false,
 
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
-
 		print("Auto Titan:", enabled)
 	end
 })
 
--- ==========================================
--- Titan Upgrade Dropdown
--- ==========================================
-
+-- Titan Upgrades
 TitanSection:CreateDropdown({
 	Name = "Titan Upgrades",
 
@@ -65,7 +42,7 @@ TitanSection:CreateDropdown({
 	Callback = function(selected)
 		SelectedTitanUpgrades = selected
 
-		print("Selected Titan Upgrades:")
+		print("Selected Titan upgrades:")
 
 		for _, upgradeName in ipairs(selected) do
 			print("-", upgradeName)
@@ -73,13 +50,9 @@ TitanSection:CreateDropdown({
 	end
 })
 
--- ==========================================
--- Action Interval Slider
--- ==========================================
-
+-- Interval
 TitanSection:CreateSlider({
 	Name = "Action Interval",
-
 	Min = 0.25,
 	Max = 5,
 	Default = 1,
@@ -87,44 +60,25 @@ TitanSection:CreateSlider({
 
 	Callback = function(value)
 		TitanInterval = value
-
-		print("Titan Interval:", value)
+		print("Titan interval:", value)
 	end
 })
 
--- ==========================================
--- Auto Titan Test Loop
--- ==========================================
-
+-- Test loop
 task.spawn(function()
-
 	while true do
-
 		if AutoTitanEnabled and #SelectedTitanUpgrades > 0 then
-
 			for _, upgradeName in ipairs(SelectedTitanUpgrades) do
-
-				-- Stop immediately if Auto Titan gets disabled
 				if not AutoTitanEnabled then
 					break
 				end
 
-				-- TEST ONLY
-				-- We'll replace this later with the action
-				print(
-					"Would process:",
-					upgradeName,
-					"Interval:",
-					TitanInterval
-				)
+				print("Would process:", upgradeName)
 
 				task.wait(TitanInterval)
 			end
-
 		else
 			task.wait(0.1)
 		end
 	end
 end)
-
-print("[FatE Hub] NoobInc loaded successfully")
