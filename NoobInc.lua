@@ -158,7 +158,7 @@ local function PurchaseFloraUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
-		return PurchaseUpgrade:InvokeServer(
+		PurchaseUpgrade:FireServer(
 			unpack(args)
 		)
 	end)
