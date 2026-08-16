@@ -358,3 +358,14 @@ task.spawn(function()
 		end
 	end
 end)
+
+
+
+local TianMarkPress =
+	ReplicatedStorage.RemoteEvents:FindFirstChild("TianMarkPress")
+
+if TianMarkPress then
+	TianMarkPress.OnClientEvent:Connect(function(...)
+		-- Consume event so the queue doesn't fill.
+	end)
+end
