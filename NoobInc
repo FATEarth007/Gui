@@ -2,109 +2,42 @@ local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
 ))()
 
-print("Library:", Library)
-print("CreateWindow:", Library and Library.CreateWindow)
-
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
 local World6 = Window:CreateTab("World 6")
-World6:CreateSection("Titan")
-
--- =========================
--- Titan Settings
--- =========================
-
-local AutoTitanEnabled = false
-local SelectedTitanUpgrades = {}
-local TitanInterval = 1
-
--- Auto Titan Toggle
+local TitanSection = World6:CreateSection("Titan")
 
 TitanSection:CreateToggle({
 	Name = "Auto Titan",
 	Default = false,
-
 	Callback = function(enabled)
-		AutoTitanEnabled = enabled
 		print("Auto Titan:", enabled)
 	end
 })
 
-print("5 - Auto Titan toggle created")
-
--- Titan Upgrade Dropdown
-
 TitanSection:CreateDropdown({
 	Name = "Titan Upgrades",
-
 	Options = {
 		"HydraDamage",
 		"HydraAttackInterval",
 		"HydraTitanYield"
 	},
-
 	Multi = true,
-
 	Callback = function(selected)
-		SelectedTitanUpgrades = selected
-
-		print("Selected Titan upgrades:")
-
-		for _, upgradeName in ipairs(selected) do
-			print("-", upgradeName)
-		end
+		print("Selected:", table.concat(selected, ", "))
 	end
 })
 
-print("6 - Titan dropdown created")
-
--- Action Interval Slider
-
 TitanSection:CreateSlider({
 	Name = "Action Interval",
-
 	Min = 0.25,
 	Max = 5,
 	Default = 1,
 	Increment = 0.25,
-
 	Callback = function(value)
-		TitanInterval = value
-		print("Titan interval:", value)
+		print("Interval:", value)
 	end
 })
-
-print("7 - Titan slider created")
-
--- =========================
--- Titan Loop
--- =========================
-
-task.spawn(function()
-	while true do
-		if AutoTitanEnabled and #SelectedTitanUpgrades > 0 then
-
-			for _, upgradeName in ipairs(SelectedTitanUpgrades) do
-				if not AutoTitanEnabled then
-					break
-				end
-
-				print(
-					"Would process:",
-					upgradeName,
-					"Interval:",
-					TitanInterval
-				)
-
-				task.wait(TitanInterval)
-			end
-
-		else
-			task.wait(0.1)
-		end
-	end
-end)
-
 print("8 - Titan loop started")
