@@ -54,14 +54,11 @@ LoadConfig()
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local PurchaseHydraUpgrade =
-	ReplicatedStorage.RemoteEvents.PurchaseHydraUpgrade
+local PurchaseHydraUpgrade = ReplicatedStorage.RemoteEvents.PurchaseHydraUpgrade
 
-local PurchaseUpgrade =
-	ReplicatedStorage.RemoteEvents.PurchaseUpgrade
+local PurchaseUpgrade = ReplicatedStorage.RemoteEvents.PurchaseUpgrade
 
-local PurchaseHydraMastery =
-	ReplicatedStorage.RemoteEvents.PurchaseHydraMastery
+local PurchaseHydraMastery = ReplicatedStorage.RemoteEvents.PurchaseHydraMastery
 
 
 -- ==========================================
