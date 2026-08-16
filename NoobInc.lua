@@ -279,7 +279,6 @@ end
 -- ==========================================
 
 task.spawn(function()
-
 	while true do
 
 		-- Auto Titan is OFF
@@ -295,26 +294,18 @@ task.spawn(function()
 		end
 
 		-- Process selected upgrades
-		for _, upgradeName
-			in ipairs(SelectedTitanUpgrades) do
-
-			-- Check toggle again
+		for _, upgradeName in ipairs(SelectedTitanUpgrades) do
 			if not AutoTitanEnabled then
 				break
 			end
 
-			PurchaseTitanUpgrade(
-				upgradeName
-			)
-
-			-- Random 0.4 - 1.0 second delay
+			PurchaseTitanUpgrade(upgradeName)
 			HumanDelay()
 		end
 	end
 end)
 
 task.spawn(function()
-
 	while true do
 
 		-- Auto Titan is OFF
@@ -330,19 +321,12 @@ task.spawn(function()
 		end
 
 		-- Process selected upgrades
-		for _, upgradeName
-			in ipairs(SelectedFloraUpgrades) do
-
-			-- Check toggle again
+		for _, upgradeName in ipairs(SelectedFloraUpgrades) do 
 			if not AutoFloraEnabled then
 				break
 			end
 
-			PurchaseFloraUpgrade(
-				upgradeName
-			)
-
-			-- Random 0.4 - 1.0 second delay
+			PurchaseFloraUpgrade(upgradeName)
 			HumanDelay()
 		end
 	end
