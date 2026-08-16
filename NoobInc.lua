@@ -53,6 +53,7 @@ local FloraSection = World6:CreateSection("Flora")
 -- ==========================================
 
 local AutoTitanEnabled = false
+local AutoFloraEnabled = false
 
 local SelectedTitanUpgrades = {}
 local SelectedFloraUpgrades = {}
