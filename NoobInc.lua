@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PurchaseHydraUpgrade =
 	ReplicatedStorage.RemoteEvents.PurchaseHydraUpgrade
 
+
 -- =========================
 -- Human Delay
 -- =========================
@@ -20,6 +21,7 @@ local function HumanDelay(minDelay, maxDelay)
 	task.wait(delay)
 end
 
+
 -- =========================
 -- UI
 -- =========================
@@ -31,17 +33,19 @@ local Window = Library:CreateWindow({
 local World6 = Window:CreateTab("World 6")
 local TitanSection = World6:CreateSection("Titan")
 
+
 -- =========================
--- Auto Titan
+-- Auto Titan Settings
 -- =========================
 
 local AutoTitanEnabled = false
 
-local TitanUpgrades = {
-	"HydraTianYield",
-	"HydraAttackInterval",
-	"HydraDamage"
-}
+local SelectedTitanUpgrades = {}
+
+
+-- =========================
+-- Auto Titan Toggle
+-- =========================
 
 TitanSection:CreateToggle({
 	Name = "Auto Titan",
@@ -49,42 +53,84 @@ TitanSection:CreateToggle({
 
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
+
 		print("Auto Titan:", enabled)
 	end
 })
+
+
+-- =========================
+-- Upgrade Selection
+-- =========================
+
+TitanSection:CreateDropdown({
+	Name = "Titan Upgrades",
+
+	Options = {
+		"HydraTianYield",
+		"HydraAttackInterval",
+		"HydraDamage"
+	},
+
+	Multi = true,
+
+	Callback = function(selected)
+		SelectedTitanUpgrades = selected
+
+		print("Selected upgrades:")
+
+		for _, upgradeName in ipairs(selected) do
+			print("-", upgradeName)
+		end
+	end
+})
+
 
 -- =========================
 -- Purchase Function
 -- =========================
 
 local function PurchaseUpgrade(upgradeName)
+
 	local args = {
 		[1] = upgradeName,
 		[2] = false
 	}
 
 	local success, result = pcall(function()
+
 		return PurchaseHydraUpgrade:InvokeServer(
 			unpack(args)
 		)
+
 	end)
 
 	if success then
 		print("Invoked:", upgradeName)
 	else
-		warn("Failed:", upgradeName, result)
+		warn(
+			"Failed:",
+			upgradeName,
+			result
+		)
 	end
 end
+
 
 -- =========================
 -- Auto Titan Loop
 -- =========================
 
 task.spawn(function()
-	while true do
-		if AutoTitanEnabled then
 
-			for _, upgradeName in ipairs(TitanUpgrades) do
+	while true do
+
+		if AutoTitanEnabled
+			and #SelectedTitanUpgrades > 0 then
+
+			for _, upgradeName
+				in ipairs(SelectedTitanUpgrades) do
+
 				if not AutoTitanEnabled then
 					break
 				end
@@ -95,7 +141,9 @@ task.spawn(function()
 			end
 
 		else
+
 			task.wait(0.1)
+
 		end
 	end
 end)
