@@ -69,10 +69,6 @@ TitanSection:CreateToggle({
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
 
-		print(
-			"[Auto Titan]",
-			enabled and "Enabled" or "Disabled"
-		)
 	end
 })
 
@@ -82,11 +78,6 @@ FloraSection:CreateToggle({
 
 	Callback = function(enabled)
 		AutoFloraEnabled = enabled
-
-		print(
-			"[Auto Flora]",
-			enabled and "Enabled" or "Disabled"
-		)
 	end
 })
 
@@ -164,7 +155,8 @@ local function PurchaseFloraUpgrade(upgradeName)
 	end)
 
 	if not success then
-		warn("Flora upgrade failed:", upgradeName, result)
+		warn(
+			"[Auto Flora] Failed:", upgradeName, result)
 	end
 end
 
