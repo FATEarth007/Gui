@@ -55,7 +55,7 @@ local FloraSection = World6:CreateSection("Flora")
 local AutoTitanEnabled = false
 
 local SelectedTitanUpgrades = {}
-
+local SelectedFloraUpgrades = {}
 
 -- ==========================================
 -- Auto Toggles
@@ -121,7 +121,7 @@ FloraSection:CreateDropdown({
 	Multi = true,
 
 	Callback = function(selected)
-		SelectedTitanUpgrades = selected
+		SelectedFloraUpgrades = selected
 	end
 })
 
@@ -131,14 +131,12 @@ FloraSection:CreateDropdown({
 -- ==========================================
 
 local function PurchaseTitanUpgrade(upgradeName)
-
 	local args = {
 		[1] = upgradeName,
 		[2] = false
 	}
 
 	local success, result = pcall(function()
-
 		return PurchaseHydraUpgrade:InvokeServer(
 			unpack(args)
 		)
@@ -146,42 +144,28 @@ local function PurchaseTitanUpgrade(upgradeName)
 	end)
 
 	if not success then
-
 		warn(
-			"[Auto Titan] Failed:",
-			upgradeName,
-			result
-		)
+			"[Auto Titan] Failed:", upgradeName, result)
 
 	end
 end
 
 local function PurchaseFloraUpgrade(upgradeName)
-
 	local args = {
 		[1] = upgradeName,
 		[2] = false
 	}
 
 	local success, result = pcall(function()
-
 		return PurchaseUpgrade:InvokeServer(
 			unpack(args)
 		)
-
 	end)
 
 	if not success then
-
-		warn(
-			"[Auto Flora] Failed:",
-			upgradeName,
-			result
-		)
-
+		warn("Flora upgrade failed:", upgradeName, result)
 	end
 end
-
 
 -- ==========================================
 -- Auto Titan Loop
