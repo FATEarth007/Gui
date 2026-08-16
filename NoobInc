@@ -1,37 +1,42 @@
-print("loadstring =", loadstring)
-print("HttpGet =", game.HttpGet)
-
 local source = game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
 )
 
-print("downloaded", #source)
-
 local compiled, err = loadstring(source)
 
-print("compiled =", compiled)
-print("error =", err)
-
 if not compiled then
-	warn("FateUI failed to compile:", err)
+	warn("Compile error:", err)
 	return
 end
 
-local Library = compiled()
+local success, Library = pcall(compiled)
+
+print("Ran FateUI:", success)
+print("Library:", Library)
+print("Library type:", typeof(Library))
+
+if not success then
+	warn("FateUI runtime error:", Library)
+	return
+end
 
 if typeof(Library) ~= "table" then
-	warn("FateUI did not return a Library table")
+	warn("FateUI did not return Library table")
 	return
 end
 
-print("Library =", Library)
-print("CreateWindow =", Library.CreateWindow)
+print("CreateWindow:", Library.CreateWindow)
+
+if typeof(Library.CreateWindow) ~= "function" then
+	warn("CreateWindow is missing")
+	return
+end
 
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
-print("2 - Window created")
+print("Window created")
 
 -- =========================
 -- World 6
