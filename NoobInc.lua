@@ -11,6 +11,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PurchaseHydraUpgrade =
 	ReplicatedStorage.RemoteEvents.PurchaseHydraUpgrade
 
+local PurchaseUpgrade =
+	ReplicatedStorage.RemoteEvents.PurchaseUpgrade
+
 
 -- ==========================================
 -- Human Delay
@@ -43,7 +46,7 @@ local World6 = Window:CreateTab("World 6")
 -- ==========================================
 
 local TitanSection = World6:CreateSection("Titan")
-
+local TitanSection = World6:CreateSection("Flora")
 
 -- ==========================================
 -- Titan Variables
@@ -55,7 +58,7 @@ local SelectedTitanUpgrades = {}
 
 
 -- ==========================================
--- Auto Titan Toggle
+-- Auto Toggles
 -- ==========================================
 
 TitanSection:CreateToggle({
@@ -73,8 +76,22 @@ TitanSection:CreateToggle({
 })
 
 
+FloraSection:CreateToggle({
+	Name = "Auto Flora",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoTitanEnabled = enabled
+
+		print(
+			"[Auto Flora]",
+			enabled and "Enabled" or "Disabled"
+		)
+	end
+})
+
 -- ==========================================
--- Titan Upgrade Selection
+-- Upgrade Selections
 -- ==========================================
 
 TitanSection:CreateDropdown({
@@ -84,6 +101,21 @@ TitanSection:CreateDropdown({
 		"HydraTianYield",
 		"HydraAttackInterval",
 		"HydraDamage"
+	},
+
+	Multi = true,
+
+	Callback = function(selected)
+		SelectedTitanUpgrades = selected
+	end
+})
+
+FloraSection:CreateDropdown({
+	Name = "Auto Flora Upgrades",
+
+	Options = {
+		"FloraMoreQiII",
+		"FloraMoreFloraII"
 	},
 
 	Multi = true,
@@ -124,6 +156,32 @@ local function PurchaseTitanUpgrade(upgradeName)
 	end
 end
 
+local function PurchaseFloraUpgrade(upgradeName)
+
+	local args = {
+		[1] = upgradeName,
+		[2] = false
+	}
+
+	local success, result = pcall(function()
+
+		return PurchaseUpgrade:InvokeServer(
+			unpack(args)
+		)
+
+	end)
+
+	if not success then
+
+		warn(
+			"[Auto Flora] Failed:",
+			upgradeName,
+			result
+		)
+
+	end
+end
+
 
 -- ==========================================
 -- Auto Titan Loop
@@ -155,6 +213,41 @@ task.spawn(function()
 			end
 
 			PurchaseTitanUpgrade(
+				upgradeName
+			)
+
+			-- Random 0.4 - 1.0 second delay
+			HumanDelay()
+		end
+	end
+end)
+
+task.spawn(function()
+
+	while true do
+
+		-- Auto Titan is OFF
+		if not AutoFloraEnabled then
+			task.wait(0.1)
+			continue
+		end
+
+		-- Nothing selected
+		if #SelectedFloraUpgrades == 0 then
+			task.wait(0.1)
+			continue
+		end
+
+		-- Process selected upgrades
+		for _, upgradeName
+			in ipairs(SelectedFloraUpgrades) do
+
+			-- Check toggle again
+			if not AutoFloraEnabled then
+				break
+			end
+
+			PurchaseFloraUpgrade(
 				upgradeName
 			)
 
