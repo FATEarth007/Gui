@@ -1,4 +1,6 @@
-local URL = "https://raw.githubusercontent.com/FATEarth007/Gui/main/FateUI.lua"
+local Library = loadstring(game:HttpGet(
+	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
+))()
 
 local source = game:HttpGet(URL)
 
