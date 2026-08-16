@@ -6,6 +6,54 @@ local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
 ))()
 
+local HttpService = game:GetService("HttpService")
+
+local ConfigFile = "FatE_NoobInc_Config.json"
+
+local Config = {
+	AutoTitan = false,
+	AutoFlora = false,
+
+	TitanUpgrades = {},
+	FloraUpgrades = {}
+}
+
+local function SaveConfig()
+	if not writefile then
+		return
+	end
+
+	local success, encoded = pcall(function()
+		return HttpService:JSONEncode(Config)
+	end)
+
+	if success then
+		writefile(ConfigFile, encoded)
+	end
+end
+
+local function LoadConfig()
+	if not readfile or not isfile then
+		return
+	end
+
+	if not isfile(ConfigFile) then
+		return
+	end
+
+	local success, decoded = pcall(function()
+		return HttpService:JSONDecode(
+			readfile(ConfigFile)
+		)
+	end)
+
+	if success and typeof(decoded) == "table" then
+		Config = decoded
+	end
+end
+
+LoadConfig()
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PurchaseHydraUpgrade =
@@ -52,32 +100,40 @@ local FloraSection = World6:CreateSection("Flora")
 -- Titan Variables
 -- ==========================================
 
-local AutoTitanEnabled = false
-local AutoFloraEnabled = false
+local AutoTitanEnabled = Config.AutoTitan or false
+local AutoFloraEnabled = Config.AutoFlora or false
 
-local SelectedTitanUpgrades = {}
-local SelectedFloraUpgrades = {}
+local SelectedTitanUpgrades =
+	Config.TitanUpgrades or {}
+
+local SelectedFloraUpgrades =
+	Config.FloraUpgrades or {}
 
 -- ==========================================
 -- Auto Toggles
 -- ==========================================
 
-TitanSection:CreateToggle({
+local AutoTitanToggle = TitanSection:CreateToggle({
 	Name = "Auto Titan",
-	Default = false,
+	Default = AutoTitanEnabled,
 
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
 
+		Config.AutoTitan = enabled
+		SaveConfig()
 	end
 })
 
-FloraSection:CreateToggle({
+local AutoFloraToggle = FloraSection:CreateToggle({
 	Name = "Auto Flora",
-	Default = false,
+	Default = AutoFloraEnabled,
 
 	Callback = function(enabled)
 		AutoFloraEnabled = enabled
+
+		Config.AutoFlora = enabled
+		SaveConfig()
 	end
 })
 
@@ -85,7 +141,7 @@ FloraSection:CreateToggle({
 -- Upgrade Selections
 -- ==========================================
 
-TitanSection:CreateDropdown({
+local TitanDropdown = TitanSection:CreateDropdown({
 	Name = "Auto Titan Upgrades",
 
 	Options = {
@@ -99,10 +155,13 @@ TitanSection:CreateDropdown({
 
 	Callback = function(selected)
 		SelectedTitanUpgrades = selected
+
+		Config.TitanUpgrades = selected
+		SaveConfig()
 	end
 })
 
-FloraSection:CreateDropdown({
+local FloraDropdown = FloraSection:CreateDropdown({
 	Name = "Auto Flora Upgrades",
 
 	Options = {
@@ -114,9 +173,19 @@ FloraSection:CreateDropdown({
 
 	Callback = function(selected)
 		SelectedFloraUpgrades = selected
+
+		Config.FloraUpgrades = selected
+		SaveConfig()
 	end
 })
 
+TitanDropdown:Set(
+	SelectedTitanUpgrades
+)
+
+FloraDropdown:Set(
+	SelectedFloraUpgrades
+)
 
 -- ==========================================
 -- Purchase Titan Upgrade
