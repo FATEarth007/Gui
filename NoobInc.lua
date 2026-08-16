@@ -1,3 +1,7 @@
+-- ==========================================
+-- FatE Hub - Noob Incremental
+-- ==========================================
+
 local Library = loadstring(game:HttpGet(
 	"https://raw.githubusercontent.com/FATEarth007/Gui/refs/heads/main/FateUI.lua"
 ))()
@@ -8,44 +12,51 @@ local PurchaseHydraUpgrade =
 	ReplicatedStorage.RemoteEvents.PurchaseHydraUpgrade
 
 
--- =========================
+-- ==========================================
 -- Human Delay
--- =========================
+-- ==========================================
 
-local function HumanDelay(minDelay, maxDelay)
-	minDelay = minDelay or 0.4
-	maxDelay = maxDelay or 1
-
-	local delay = minDelay + math.random() * (maxDelay - minDelay)
-
-	task.wait(delay)
+local function HumanDelay()
+	local delayTime = 0.4 + math.random() * 0.6
+	task.wait(delayTime)
 end
 
 
--- =========================
--- UI
--- =========================
+-- ==========================================
+-- Window
+-- ==========================================
 
 local Window = Library:CreateWindow({
 	Title = "FatE Hub"
 })
 
+
+-- ==========================================
+-- World 6
+-- ==========================================
+
 local World6 = Window:CreateTab("World 6")
+
+
+-- ==========================================
+-- Titan Section
+-- ==========================================
+
 local TitanSection = World6:CreateSection("Titan")
 
 
--- =========================
--- Auto Titan Settings
--- =========================
+-- ==========================================
+-- Titan Variables
+-- ==========================================
 
 local AutoTitanEnabled = false
 
 local SelectedTitanUpgrades = {}
 
 
--- =========================
+-- ==========================================
 -- Auto Titan Toggle
--- =========================
+-- ==========================================
 
 TitanSection:CreateToggle({
 	Name = "Auto Titan",
@@ -54,17 +65,20 @@ TitanSection:CreateToggle({
 	Callback = function(enabled)
 		AutoTitanEnabled = enabled
 
-		print("Auto Titan:", enabled)
+		print(
+			"[Auto Titan]",
+			enabled and "Enabled" or "Disabled"
+		)
 	end
 })
 
 
--- =========================
--- Upgrade Selection
--- =========================
+-- ==========================================
+-- Titan Upgrade Selection
+-- ==========================================
 
 TitanSection:CreateDropdown({
-	Name = "Titan Upgrades",
+	Name = "Auto Titan Upgrades",
 
 	Options = {
 		"HydraTianYield",
@@ -76,21 +90,15 @@ TitanSection:CreateDropdown({
 
 	Callback = function(selected)
 		SelectedTitanUpgrades = selected
-
-		print("Selected upgrades:")
-
-		for _, upgradeName in ipairs(selected) do
-			print("-", upgradeName)
-		end
 	end
 })
 
 
--- =========================
--- Purchase Function
--- =========================
+-- ==========================================
+-- Purchase Titan Upgrade
+-- ==========================================
 
-local function PurchaseUpgrade(upgradeName)
+local function PurchaseTitanUpgrade(upgradeName)
 
 	local args = {
 		[1] = upgradeName,
@@ -105,45 +113,53 @@ local function PurchaseUpgrade(upgradeName)
 
 	end)
 
-	if success then
-		print("Invoked:", upgradeName)
-	else
+	if not success then
+
 		warn(
-			"Failed:",
+			"[Auto Titan] Failed:",
 			upgradeName,
 			result
 		)
+
 	end
 end
 
 
--- =========================
+-- ==========================================
 -- Auto Titan Loop
--- =========================
+-- ==========================================
 
 task.spawn(function()
 
 	while true do
 
-		if AutoTitanEnabled
-			and #SelectedTitanUpgrades > 0 then
+		-- Auto Titan is OFF
+		if not AutoTitanEnabled then
+			task.wait(0.1)
+			continue
+		end
 
-			for _, upgradeName
-				in ipairs(SelectedTitanUpgrades) do
+		-- Nothing selected
+		if #SelectedTitanUpgrades == 0 then
+			task.wait(0.1)
+			continue
+		end
 
-				if not AutoTitanEnabled then
-					break
-				end
+		-- Process selected upgrades
+		for _, upgradeName
+			in ipairs(SelectedTitanUpgrades) do
 
-				PurchaseUpgrade(upgradeName)
-
-				HumanDelay(0.4, 1)
+			-- Check toggle again
+			if not AutoTitanEnabled then
+				break
 			end
 
-		else
+			PurchaseTitanUpgrade(
+				upgradeName
+			)
 
-			task.wait(0.1)
-
+			-- Random 0.4 - 1.0 second delay
+			HumanDelay()
 		end
 	end
 end)
