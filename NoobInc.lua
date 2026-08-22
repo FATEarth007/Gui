@@ -88,9 +88,7 @@ local PurchaseSoulUpgrade =
 -- ==========================================
 
 local function HumanDelay()
-	local delayTime =
-		0.4 + math.random() * 0.6
-
+	local delayTime = 0.4 + math.random() * 0.6
 	task.wait(delayTime)
 end
 
@@ -323,14 +321,15 @@ SoulUpgradeDropdown:Set(
 
 
 -- ==========================================
--- Kill Script Button
+-- Kill Script
 -- ==========================================
 
 SettingsSection:CreateButton({
 	Name = "Kill Script",
 
 	Callback = function()
-		-- Stop all automation
+
+		-- Stop every automation
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
@@ -339,32 +338,16 @@ SettingsSection:CreateButton({
 		AutoSoulEnabled = false
 		AutoSoulUpgradesEnabled = false
 
-		-- Stop character movement
-		local character = player.Character
+		print("[FatE Hub] Killing script")
 
-		if character then
-			local humanoid =
-				character:FindFirstChildOfClass("Humanoid")
-
-			local root =
-				character:FindFirstChild("HumanoidRootPart")
-
-			if humanoid and root then
-				humanoid:MoveTo(root.Position)
-			end
+		-- Hide the window immediately
+		if Window.MainFrame then
+			Window.MainFrame.Visible = false
 		end
 
-		-- Destroy FatE Hub GUI
-		local playerGui =
-			player:FindFirstChild("PlayerGui")
-
-		if playerGui then
-			local fateGui =
-				playerGui:FindFirstChild("FateUI")
-
-			if fateGui then
-				fateGui:Destroy()
-			end
+		-- Destroy FateUI
+		if Window.ScreenGui then
+			Window.ScreenGui:Destroy()
 		end
 
 		print("[FatE Hub] Script killed")
@@ -533,10 +516,8 @@ local function GetClosestSoul()
 				).Magnitude
 
 			if distance < closestDistance then
-
 				closestDistance = distance
 				closestBody = body
-
 			end
 		end
 	end
