@@ -325,7 +325,42 @@ MasteryDropdown:Set(
 SoulUpgradeDropdown:Set(
 	SelectedSoulUpgrades
 )
+-- ==========================================
+-- Kill Script
+-- ==========================================
 
+local WalkSpeed = 16
+
+SettingsSection:CreateSlider({
+	Name = "Walk Speed",
+	Min = 8,
+	Max = 50,
+	Default = 16,
+	Increment = 1,
+
+	Callback = function(value)
+		WalkSpeed = value
+
+		local character = player.Character
+		if not character then
+			return
+		end
+
+		local humanoid =
+			character:FindFirstChildOfClass("Humanoid")
+
+		if humanoid then
+			humanoid.WalkSpeed = value
+		end
+	end
+})
+
+player.CharacterAdded:Connect(function(character)
+	local humanoid =
+		character:WaitForChild("Humanoid")
+
+	humanoid.WalkSpeed = WalkSpeed
+end)
 
 -- ==========================================
 -- Kill Script
