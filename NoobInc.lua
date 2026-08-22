@@ -805,7 +805,7 @@ local currentCamera = game.Workspace.CurrentCamera
 
 player.Idled:Connect(function()
 	VirtualUser:Button2Down(Vector2.zero, currentCamera.CFrame)
-	task.wait(5)
+	task.wait(150)
 	VirtualUser:Button2Up(Vector2.zero, currentCamera.CFrame)
 
 	print("Player Successfully UnIdled.")
