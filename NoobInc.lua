@@ -330,6 +330,7 @@ SettingsSection:CreateButton({
 	Name = "Kill Script",
 
 	Callback = function()
+		-- Stop all automation
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
@@ -338,29 +339,35 @@ SettingsSection:CreateButton({
 		AutoSoulEnabled = false
 		AutoSoulUpgradesEnabled = false
 
+		-- Stop character movement
 		local character = player.Character
 
 		if character then
 			local humanoid =
-				character:FindFirstChildOfClass(
-					"Humanoid"
-				)
+				character:FindFirstChildOfClass("Humanoid")
 
 			local root =
-				character:FindFirstChild(
-					"HumanoidRootPart"
-				)
+				character:FindFirstChild("HumanoidRootPart")
 
 			if humanoid and root then
-				humanoid:MoveTo(
-					root.Position
-				)
+				humanoid:MoveTo(root.Position)
 			end
 		end
 
-		print("[FatE Hub] Script stopped")
+		-- Destroy FatE Hub GUI
+		local playerGui =
+			player:FindFirstChild("PlayerGui")
 
-		Window:Destroy()	
+		if playerGui then
+			local fateGui =
+				playerGui:FindFirstChild("FateUI")
+
+			if fateGui then
+				fateGui:Destroy()
+			end
+		end
+
+		print("[FatE Hub] Script killed")
 	end
 })
 
