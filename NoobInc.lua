@@ -286,7 +286,14 @@ local SoulUpgradeDropdown =
 	Name = "Soul Upgrades",
 
 	Options = {
-		"SoulsQiBoost"
+		"SoulsQiBoost",
+		"SoulsLuckBoost",
+		"SoulsGainBoost",
+		"SoulsLightDuration",
+		"SoulsLightSize",
+		"SoulsLightChance",	
+		"SoulsSpawnCapacity",
+		"SoulsSpawnSpeed"	
 	},
 
 	Multi = true,
