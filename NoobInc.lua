@@ -359,6 +359,8 @@ SettingsSection:CreateButton({
 		end
 
 		print("[FatE Hub] Script stopped")
+
+		Window:Destroy()	
 	end
 })
 
