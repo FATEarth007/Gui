@@ -94,6 +94,7 @@ local World6 = Window:CreateTab("World 6")
 local TitanSection = World6:CreateSection("Titan")
 local FloraSection = World6:CreateSection("Flora")
 local MasterySection = World6:CreateSection("Mastery")
+local SoulSection = World6:CreateSection("Souls")
 
 -- ==========================================
 -- Titan Variables
@@ -102,6 +103,9 @@ local MasterySection = World6:CreateSection("Mastery")
 local AutoTitanEnabled = false
 local AutoFloraEnabled = false
 local AutoMasteryEnabled = false
+local AutoSoulEnabled = false
+
+
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -111,6 +115,7 @@ local SelectedFloraUpgrades =
 
 local SelectedMasteryUpgrades =
 	Config.MasteryUpgrades or {} 
+
 
 -- ==========================================
 -- Auto Toggles
@@ -142,6 +147,69 @@ local AutoMasteryToggle = MasterySection:CreateToggle({
 		AutoMasteryEnabled = enabled
 	end
 })
+
+SoulSection:CreateToggle({
+	Name = "Auto Collect Souls",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoSoulEnabled = enabled
+	end
+})
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local SoulsRuntime = workspace:WaitForChild("SoulsRuntime")
+
+local function GetClosestSoul()
+	local character = player.Character
+	if not character then
+		return nil
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local closestBody = nil
+	local closestDistance = math.huge
+
+	for _, soul in ipairs(SoulsRuntime:GetChildren()) do
+		local body = soul:FindFirstChild("Body")
+
+		if body and body:IsA("BasePart") then
+			local distance =
+				(root.Position - body.Position).Magnitude
+
+			if distance < closestDistance then
+				closestDistance = distance
+				closestBody = body
+			end
+		end
+	end
+
+	return closestBody
+end
+
+local function MoveToSoul(body)
+	local character = player.Character
+	if not character then
+		return
+	end
+
+	local humanoid =
+		character:FindFirstChildOfClass("Humanoid")
+
+	if not humanoid then
+		return
+	end
+
+	humanoid:MoveTo(body.Position)
+	humanoid.MoveToFinished:Wait()
+end
 
 -- ==========================================
 -- Upgrade Selections
@@ -366,3 +434,21 @@ if TianMarkPress then
 		print("[TianMarkPress]", ...)
 	end)
 end
+
+
+task.spawn(function()
+	while true do
+		if not AutoSoulEnabled then
+			task.wait(0.2)
+			continue
+		end
+
+		local body = GetClosestSoul()
+
+		if body then
+			MoveToSoul(body)
+		else
+			task.wait(0.5)
+		end
+	end
+end)
