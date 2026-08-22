@@ -194,21 +194,20 @@ local function GetClosestSoul()
 	return closestBody
 end
 
-local function MoveToSoul(body)
+local function TeleportToSoul(body)
 	local character = player.Character
 	if not character then
 		return
 	end
 
-	local humanoid =
-		character:FindFirstChildOfClass("Humanoid")
-
-	if not humanoid then
+	local position = GetPosition(body)
+	if not position then
 		return
 	end
 
-	humanoid:MoveTo(body.Position)
-	humanoid.MoveToFinished:Wait()
+	character:PivotTo(
+		CFrame.new(position + Vector3.new(0, 2, 0))
+	)
 end
 
 -- ==========================================
@@ -340,7 +339,7 @@ local function PurchaseMasteryUpgrade(upgradeName)
 end
 
 -- ==========================================
--- Auto Titan Loop
+-- functions
 -- ==========================================
 
 task.spawn(function()
@@ -443,10 +442,13 @@ task.spawn(function()
 			continue
 		end
 
-		local body = GetClosestSoul()
+		local soul = GetClosestSoul()
 
-		if body then
-			MoveToSoul(body)
+		if soul then
+			TeleportToSoul(soul)
+
+			-- Give the game's collection logic time to register
+			task.wait(0.25)
 		else
 			task.wait(0.5)
 		end
