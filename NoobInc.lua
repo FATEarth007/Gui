@@ -105,11 +105,14 @@ local Window = Library:CreateWindow({
 
 
 -- ==========================================
--- World 6
+-- Tabs
 -- ==========================================
 
 local World6 =
 	Window:CreateTab("World 6")
+
+local SettingsTab =
+	Window:CreateTab("Settings")
 
 
 -- ==========================================
@@ -128,15 +131,19 @@ local MasterySection =
 local SoulSection =
 	World6:CreateSection("Souls")
 
+local SettingsSection =
+	SettingsTab:CreateSection("Script")
+
 
 -- ==========================================
 -- Automation Variables
 -- ==========================================
 
+local ScriptRunning = true
+
 local AutoTitanEnabled = false
 local AutoFloraEnabled = false
 local AutoMasteryEnabled = false
-
 local AutoSoulEnabled = false
 local AutoSoulUpgradesEnabled = false
 
@@ -313,6 +320,47 @@ MasteryDropdown:Set(
 SoulUpgradeDropdown:Set(
 	SelectedSoulUpgrades
 )
+
+
+-- ==========================================
+-- Kill Script Button
+-- ==========================================
+
+SettingsSection:CreateButton({
+	Name = "Kill Script",
+
+	Callback = function()
+		ScriptRunning = false
+
+		AutoTitanEnabled = false
+		AutoFloraEnabled = false
+		AutoMasteryEnabled = false
+		AutoSoulEnabled = false
+		AutoSoulUpgradesEnabled = false
+
+		local character = player.Character
+
+		if character then
+			local humanoid =
+				character:FindFirstChildOfClass(
+					"Humanoid"
+				)
+
+			local root =
+				character:FindFirstChild(
+					"HumanoidRootPart"
+				)
+
+			if humanoid and root then
+				humanoid:MoveTo(
+					root.Position
+				)
+			end
+		end
+
+		print("[FatE Hub] Script stopped")
+	end
+})
 
 
 -- ==========================================
@@ -521,7 +569,7 @@ end
 
 task.spawn(function()
 
-	while true do
+	while ScriptRunning do
 
 		if not AutoTitanEnabled then
 			task.wait(0.1)
@@ -536,7 +584,8 @@ task.spawn(function()
 		for _, upgradeName
 			in ipairs(SelectedTitanUpgrades) do
 
-			if not AutoTitanEnabled then
+			if not ScriptRunning
+				or not AutoTitanEnabled then
 				break
 			end
 
@@ -556,7 +605,7 @@ end)
 
 task.spawn(function()
 
-	while true do
+	while ScriptRunning do
 
 		if not AutoFloraEnabled then
 			task.wait(0.1)
@@ -571,7 +620,8 @@ task.spawn(function()
 		for _, upgradeName
 			in ipairs(SelectedFloraUpgrades) do
 
-			if not AutoFloraEnabled then
+			if not ScriptRunning
+				or not AutoFloraEnabled then
 				break
 			end
 
@@ -591,7 +641,7 @@ end)
 
 task.spawn(function()
 
-	while true do
+	while ScriptRunning do
 
 		if not AutoMasteryEnabled then
 			task.wait(0.1)
@@ -606,7 +656,8 @@ task.spawn(function()
 		for _, upgradeName
 			in ipairs(SelectedMasteryUpgrades) do
 
-			if not AutoMasteryEnabled then
+			if not ScriptRunning
+				or not AutoMasteryEnabled then
 				break
 			end
 
@@ -626,7 +677,7 @@ end)
 
 task.spawn(function()
 
-	while true do
+	while ScriptRunning do
 
 		if not AutoSoulUpgradesEnabled then
 			task.wait(0.1)
@@ -641,7 +692,8 @@ task.spawn(function()
 		for _, upgradeName
 			in ipairs(SelectedSoulUpgrades) do
 
-			if not AutoSoulUpgradesEnabled then
+			if not ScriptRunning
+				or not AutoSoulUpgradesEnabled then
 				break
 			end
 
@@ -661,7 +713,7 @@ end)
 
 task.spawn(function()
 
-	while true do
+	while ScriptRunning do
 
 		if not AutoSoulEnabled then
 			task.wait(0.2)
