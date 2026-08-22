@@ -22,7 +22,8 @@ local ConfigFile = "FatE_NoobInc_Config.json"
 local Config = {
 	TitanUpgrades = {},
 	FloraUpgrades = {},
-	MasteryUpgrades = {}
+	MasteryUpgrades = {},
+	SoulUpgrades = {}
 }
 
 local function SaveConfig()
@@ -78,6 +79,9 @@ local PurchaseUpgrade =
 local PurchaseHydraMastery =
 	RemoteEvents:WaitForChild("PurchaseHydraMastery")
 
+local PurchaseSoulUpgrade =
+	RemoteEvents:WaitForChild("purchase_souls_upgrade")
+
 
 -- ==========================================
 -- Human Delay
@@ -132,7 +136,9 @@ local SoulSection =
 local AutoTitanEnabled = false
 local AutoFloraEnabled = false
 local AutoMasteryEnabled = false
+
 local AutoSoulEnabled = false
+local AutoSoulUpgradesEnabled = false
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -143,9 +149,12 @@ local SelectedFloraUpgrades =
 local SelectedMasteryUpgrades =
 	Config.MasteryUpgrades or {}
 
+local SelectedSoulUpgrades =
+	Config.SoulUpgrades or {}
+
 
 -- ==========================================
--- Auto Titan
+-- Titan Controls
 -- ==========================================
 
 TitanSection:CreateToggle({
@@ -156,53 +165,6 @@ TitanSection:CreateToggle({
 		AutoTitanEnabled = enabled
 	end
 })
-
-
--- ==========================================
--- Auto Flora
--- ==========================================
-
-FloraSection:CreateToggle({
-	Name = "Auto Flora",
-	Default = false,
-
-	Callback = function(enabled)
-		AutoFloraEnabled = enabled
-	end
-})
-
-
--- ==========================================
--- Auto Mastery
--- ==========================================
-
-MasterySection:CreateToggle({
-	Name = "Auto Mastery",
-	Default = false,
-
-	Callback = function(enabled)
-		AutoMasteryEnabled = enabled
-	end
-})
-
-
--- ==========================================
--- Auto Collect Souls
--- ==========================================
-
-SoulSection:CreateToggle({
-	Name = "Auto Collect Souls",
-	Default = false,
-
-	Callback = function(enabled)
-		AutoSoulEnabled = enabled
-	end
-})
-
-
--- ==========================================
--- Titan Dropdown
--- ==========================================
 
 local TitanDropdown =
 	TitanSection:CreateDropdown({
@@ -220,17 +182,24 @@ local TitanDropdown =
 
 	Callback = function(selected)
 		SelectedTitanUpgrades = selected
-
 		Config.TitanUpgrades = selected
-
 		SaveConfig()
 	end
 })
 
 
 -- ==========================================
--- Flora Dropdown
+-- Flora Controls
 -- ==========================================
+
+FloraSection:CreateToggle({
+	Name = "Auto Flora",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoFloraEnabled = enabled
+	end
+})
 
 local FloraDropdown =
 	FloraSection:CreateDropdown({
@@ -246,17 +215,24 @@ local FloraDropdown =
 
 	Callback = function(selected)
 		SelectedFloraUpgrades = selected
-
 		Config.FloraUpgrades = selected
-
 		SaveConfig()
 	end
 })
 
 
 -- ==========================================
--- Mastery Dropdown
+-- Mastery Controls
 -- ==========================================
+
+MasterySection:CreateToggle({
+	Name = "Auto Mastery",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoMasteryEnabled = enabled
+	end
+})
 
 local MasteryDropdown =
 	MasterySection:CreateDropdown({
@@ -271,9 +247,48 @@ local MasteryDropdown =
 
 	Callback = function(selected)
 		SelectedMasteryUpgrades = selected
-
 		Config.MasteryUpgrades = selected
+		SaveConfig()
+	end
+})
 
+
+-- ==========================================
+-- Soul Controls
+-- ==========================================
+
+SoulSection:CreateToggle({
+	Name = "Auto Collect Souls",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoSoulEnabled = enabled
+	end
+})
+
+SoulSection:CreateToggle({
+	Name = "Auto Soul Upgrades",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoSoulUpgradesEnabled = enabled
+	end
+})
+
+local SoulUpgradeDropdown =
+	SoulSection:CreateDropdown({
+
+	Name = "Soul Upgrades",
+
+	Options = {
+		"SoulsQiBoost"
+	},
+
+	Multi = true,
+
+	Callback = function(selected)
+		SelectedSoulUpgrades = selected
+		Config.SoulUpgrades = selected
 		SaveConfig()
 	end
 })
@@ -293,6 +308,10 @@ FloraDropdown:Set(
 
 MasteryDropdown:Set(
 	SelectedMasteryUpgrades
+)
+
+SoulUpgradeDropdown:Set(
+	SelectedSoulUpgrades
 )
 
 
@@ -384,6 +403,35 @@ end
 
 
 -- ==========================================
+-- Purchase Soul Upgrade
+-- ==========================================
+
+local function PurchaseSoulUpgradeByName(upgradeName)
+
+	local args = {
+		[1] = upgradeName,
+		[2] = false
+	}
+
+	local success, result = pcall(function()
+
+		return PurchaseSoulUpgrade:InvokeServer(
+			unpack(args)
+		)
+
+	end)
+
+	if not success then
+		warn(
+			"[Auto Soul Upgrades] Failed:",
+			upgradeName,
+			result
+		)
+	end
+end
+
+
+-- ==========================================
 -- Soul Collection
 -- ==========================================
 
@@ -439,10 +487,6 @@ local function GetClosestSoul()
 	return closestBody
 end
 
-
--- ==========================================
--- Walk To Soul
--- ==========================================
 
 local function MoveToSoul(body)
 
@@ -577,6 +621,41 @@ end)
 
 
 -- ==========================================
+-- Auto Soul Upgrade Loop
+-- ==========================================
+
+task.spawn(function()
+
+	while true do
+
+		if not AutoSoulUpgradesEnabled then
+			task.wait(0.1)
+			continue
+		end
+
+		if #SelectedSoulUpgrades == 0 then
+			task.wait(0.1)
+			continue
+		end
+
+		for _, upgradeName
+			in ipairs(SelectedSoulUpgrades) do
+
+			if not AutoSoulUpgradesEnabled then
+				break
+			end
+
+			PurchaseSoulUpgradeByName(
+				upgradeName
+			)
+
+			HumanDelay()
+		end
+	end
+end)
+
+
+-- ==========================================
 -- Auto Soul Collection Loop
 -- ==========================================
 
@@ -596,8 +675,6 @@ task.spawn(function()
 
 			MoveToSoul(soul)
 
-			-- Keep updating the destination
-			-- while souls spawn/disappear
 			task.wait(0.25)
 
 		else
