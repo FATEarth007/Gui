@@ -88,7 +88,9 @@ local PurchaseSoulUpgrade =
 -- ==========================================
 
 local function HumanDelay()
-	local delayTime = 0.4 + math.random() * 0.6
+	local delayTime =
+		0.4 + math.random() * 0.6
+
 	task.wait(delayTime)
 end
 
@@ -109,12 +111,15 @@ local Window = Library:CreateWindow({
 local World6 =
 	Window:CreateTab("World 6")
 
+local DungeonTab =
+	Window:CreateTab("Dungeon")
+
 local SettingsTab =
 	Window:CreateTab("Settings")
 
 
 -- ==========================================
--- Sections
+-- World 6 Sections
 -- ==========================================
 
 local TitanSection =
@@ -128,6 +133,19 @@ local MasterySection =
 
 local SoulSection =
 	World6:CreateSection("Souls")
+
+
+-- ==========================================
+-- Dungeon Section
+-- ==========================================
+
+local DungeonSection =
+	DungeonTab:CreateSection("Automation")
+
+
+-- ==========================================
+-- Settings Section
+-- ==========================================
 
 local SettingsSection =
 	SettingsTab:CreateSection("Script")
@@ -144,6 +162,7 @@ local AutoFloraEnabled = false
 local AutoMasteryEnabled = false
 local AutoSoulEnabled = false
 local AutoSoulUpgradesEnabled = false
+local AutoDungeonEnabled = false
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -291,9 +310,9 @@ local SoulUpgradeDropdown =
 		"SoulsGainBoost",
 		"SoulsLightDuration",
 		"SoulsLightSize",
-		"SoulsLightChance",	
+		"SoulsLightChance",
 		"SoulsSpawnCapacity",
-		"SoulsSpawnSpeed"	
+		"SoulsSpawnSpeed"
 	},
 
 	Multi = true,
@@ -302,6 +321,20 @@ local SoulUpgradeDropdown =
 		SelectedSoulUpgrades = selected
 		Config.SoulUpgrades = selected
 		SaveConfig()
+	end
+})
+
+
+-- ==========================================
+-- Dungeon Controls
+-- ==========================================
+
+DungeonSection:CreateToggle({
+	Name = "Auto Dungeon",
+	Default = false,
+
+	Callback = function(enabled)
+		AutoDungeonEnabled = enabled
 	end
 })
 
@@ -325,42 +358,7 @@ MasteryDropdown:Set(
 SoulUpgradeDropdown:Set(
 	SelectedSoulUpgrades
 )
--- ==========================================
--- Kill Script
--- ==========================================
 
-local WalkSpeed = 16
-
-SettingsSection:CreateSlider({
-	Name = "Walk Speed",
-	Min = 8,
-	Max = 50,
-	Default = 16,
-	Increment = 1,
-
-	Callback = function(value)
-		WalkSpeed = value
-
-		local character = player.Character
-		if not character then
-			return
-		end
-
-		local humanoid =
-			character:FindFirstChildOfClass("Humanoid")
-
-		if humanoid then
-			humanoid.WalkSpeed = value
-		end
-	end
-})
-
-player.CharacterAdded:Connect(function(character)
-	local humanoid =
-		character:WaitForChild("Humanoid")
-
-	humanoid.WalkSpeed = WalkSpeed
-end)
 
 -- ==========================================
 -- Kill Script
@@ -370,8 +368,6 @@ SettingsSection:CreateButton({
 	Name = "Kill Script",
 
 	Callback = function()
-
-		-- Stop every automation
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
@@ -379,20 +375,15 @@ SettingsSection:CreateButton({
 		AutoMasteryEnabled = false
 		AutoSoulEnabled = false
 		AutoSoulUpgradesEnabled = false
+		AutoDungeonEnabled = false
 
-		print("[FatE Hub] Killing script")
-
-		-- Hide the window immediately
 		if Window.MainFrame then
 			Window.MainFrame.Visible = false
 		end
 
-		-- Destroy FateUI
 		if Window.ScreenGui then
 			Window.ScreenGui:Destroy()
 		end
-
-		print("[FatE Hub] Script killed")
 	end
 })
 
@@ -409,11 +400,9 @@ local function PurchaseTitanUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
-
 		return PurchaseHydraUpgrade:InvokeServer(
 			unpack(args)
 		)
-
 	end)
 
 	if not success then
@@ -438,11 +427,9 @@ local function PurchaseFloraUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
-
 		PurchaseUpgrade:FireServer(
 			unpack(args)
 		)
-
 	end)
 
 	if not success then
@@ -467,11 +454,9 @@ local function PurchaseMasteryUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
-
 		return PurchaseHydraMastery:InvokeServer(
 			unpack(args)
 		)
-
 	end)
 
 	if not success then
@@ -496,11 +481,9 @@ local function PurchaseSoulUpgradeByName(upgradeName)
 	}
 
 	local success, result = pcall(function()
-
 		return PurchaseSoulUpgrade:InvokeServer(
 			unpack(args)
 		)
-
 	end)
 
 	if not success then
@@ -510,6 +493,31 @@ local function PurchaseSoulUpgradeByName(upgradeName)
 			result
 		)
 	end
+end
+
+
+-- ==========================================
+-- Generic Movement
+-- ==========================================
+
+local function MoveToPosition(position)
+
+	local character = player.Character
+
+	if not character then
+		return
+	end
+
+	local humanoid =
+		character:FindFirstChildOfClass(
+			"Humanoid"
+		)
+
+	if not humanoid then
+		return
+	end
+
+	humanoid:MoveTo(position)
 end
 
 
@@ -568,30 +576,101 @@ local function GetClosestSoul()
 end
 
 
-local function MoveToSoul(body)
+-- ==========================================
+-- Dungeon Runtime
+-- ==========================================
 
-	if not body then
-		return
+local RaidDungeon =
+	workspace:WaitForChild("RaidDungeon")
+
+local RaidRuntime =
+	RaidDungeon:WaitForChild("Runtime")
+
+
+local function GetCurrentRaidEnemy()
+
+	local bestEnemy = nil
+	local bestFloor = -1
+
+	for _, room
+		in ipairs(RaidRuntime:GetChildren()) do
+
+		local floorNumber =
+			string.match(
+				room.Name,
+				"_Floor_(%d+)"
+			)
+
+		floorNumber =
+			tonumber(floorNumber)
+
+		if floorNumber
+			and floorNumber > bestFloor then
+
+			local enemy =
+				room:FindFirstChild(
+					"RaidEnemy",
+					true
+				)
+
+			if enemy then
+
+				local enemyRoot =
+					enemy:FindFirstChild(
+						"HumanoidRootPart",
+						true
+					)
+
+				if enemyRoot
+					and enemyRoot:IsA("BasePart") then
+
+					bestFloor = floorNumber
+					bestEnemy = enemyRoot
+				end
+			end
+		end
 	end
 
-	local character = player.Character
+	return bestEnemy
+end
 
-	if not character then
-		return
+
+local function GetCurrentContinuePad()
+
+	local bestPad = nil
+	local bestPrep = -1
+
+	for _, room
+		in ipairs(RaidRuntime:GetChildren()) do
+
+		local prepNumber =
+			string.match(
+				room.Name,
+				"_Prep_(%d+)"
+			)
+
+		prepNumber =
+			tonumber(prepNumber)
+
+		if prepNumber
+			and prepNumber > bestPrep then
+
+			local pad =
+				room:FindFirstChild(
+					"ContinuePad",
+					true
+				)
+
+			if pad
+				and pad:IsA("BasePart") then
+
+				bestPrep = prepNumber
+				bestPad = pad
+			end
+		end
 	end
 
-	local humanoid =
-		character:FindFirstChildOfClass(
-			"Humanoid"
-		)
-
-	if not humanoid then
-		return
-	end
-
-	humanoid:MoveTo(
-		body.Position
-	)
+	return bestPad
 end
 
 
@@ -757,7 +836,9 @@ task.spawn(function()
 
 		if soul then
 
-			MoveToSoul(soul)
+			MoveToPosition(
+				soul.Position
+			)
 
 			task.wait(0.25)
 
@@ -766,6 +847,50 @@ task.spawn(function()
 			task.wait(0.5)
 
 		end
+	end
+end)
+
+
+-- ==========================================
+-- Auto Dungeon Loop
+-- ==========================================
+
+task.spawn(function()
+
+	while ScriptRunning do
+
+		if not AutoDungeonEnabled then
+			task.wait(0.2)
+			continue
+		end
+
+		local enemyRoot =
+			GetCurrentRaidEnemy()
+
+		if enemyRoot then
+
+			MoveToPosition(
+				enemyRoot.Position
+			)
+
+			task.wait(0.25)
+			continue
+		end
+
+		local continuePad =
+			GetCurrentContinuePad()
+
+		if continuePad then
+
+			MoveToPosition(
+				continuePad.Position
+			)
+
+			task.wait(0.25)
+			continue
+		end
+
+		task.wait(0.5)
 	end
 end)
 
@@ -780,34 +905,9 @@ local TianMarkPress =
 	)
 
 if TianMarkPress then
-
 	TianMarkPress.OnClientEvent:Connect(
 		function(...)
 			-- Consume incoming event
 		end
 	)
-
 end
-
-
-
--- ==========================================
--- Anti AFK
--- ==========================================
-
-local Players = game:GetService("Players")
-local VirtualUser = game:GetService("VirtualUser")
-local player = Players.LocalPlayer
-
-player.Idled:Connect(function()
-	print("Idled event fired")
-end)
-
-player.Idled:Connect(function()
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new(0,0))
-	
-	print("Player Successfully UnIdled.")
-end)
-
-print("Script Ran")
