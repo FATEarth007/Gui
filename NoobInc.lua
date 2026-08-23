@@ -119,7 +119,7 @@ local SettingsTab =
 
 
 -- ==========================================
--- World 6 Sections
+-- Sections
 -- ==========================================
 
 local TitanSection =
@@ -134,18 +134,8 @@ local MasterySection =
 local SoulSection =
 	World6:CreateSection("Souls")
 
-
--- ==========================================
--- Dungeon Section
--- ==========================================
-
 local DungeonSection =
 	DungeonTab:CreateSection("Automation")
-
-
--- ==========================================
--- Settings Section
--- ==========================================
 
 local SettingsSection =
 	SettingsTab:CreateSection("Script")
@@ -163,6 +153,8 @@ local AutoMasteryEnabled = false
 local AutoSoulEnabled = false
 local AutoSoulUpgradesEnabled = false
 local AutoDungeonEnabled = false
+
+local WalkSpeed = 16
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -340,6 +332,48 @@ DungeonSection:CreateToggle({
 
 
 -- ==========================================
+-- Settings Controls
+-- ==========================================
+
+SettingsSection:CreateSlider({
+	Name = "Walk Speed",
+	Min = 8,
+	Max = 50,
+	Default = 16,
+	Increment = 1,
+
+	Callback = function(value)
+		WalkSpeed = value
+
+		local character = player.Character
+
+		if not character then
+			return
+		end
+
+		local humanoid =
+			character:FindFirstChildOfClass(
+				"Humanoid"
+			)
+
+		if humanoid then
+			humanoid.WalkSpeed = value
+		end
+	end
+})
+
+
+-- Reapply walk speed after respawn
+player.CharacterAdded:Connect(function(character)
+
+	local humanoid =
+		character:WaitForChild("Humanoid")
+
+	humanoid.WalkSpeed = WalkSpeed
+end)
+
+
+-- ==========================================
 -- Restore Dropdown Selections
 -- ==========================================
 
@@ -368,6 +402,7 @@ SettingsSection:CreateButton({
 	Name = "Kill Script",
 
 	Callback = function()
+
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
@@ -377,6 +412,29 @@ SettingsSection:CreateButton({
 		AutoSoulUpgradesEnabled = false
 		AutoDungeonEnabled = false
 
+		-- Stop current movement
+		local character = player.Character
+
+		if character then
+
+			local humanoid =
+				character:FindFirstChildOfClass(
+					"Humanoid"
+				)
+
+			local root =
+				character:FindFirstChild(
+					"HumanoidRootPart"
+				)
+
+			if humanoid and root then
+				humanoid:MoveTo(
+					root.Position
+				)
+			end
+		end
+
+		-- Hide/remove UI
 		if Window.MainFrame then
 			Window.MainFrame.Visible = false
 		end
@@ -400,9 +458,11 @@ local function PurchaseTitanUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
+
 		return PurchaseHydraUpgrade:InvokeServer(
 			unpack(args)
 		)
+
 	end)
 
 	if not success then
@@ -427,9 +487,11 @@ local function PurchaseFloraUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
+
 		PurchaseUpgrade:FireServer(
 			unpack(args)
 		)
+
 	end)
 
 	if not success then
@@ -454,9 +516,11 @@ local function PurchaseMasteryUpgrade(upgradeName)
 	}
 
 	local success, result = pcall(function()
+
 		return PurchaseHydraMastery:InvokeServer(
 			unpack(args)
 		)
+
 	end)
 
 	if not success then
@@ -481,9 +545,11 @@ local function PurchaseSoulUpgradeByName(upgradeName)
 	}
 
 	local success, result = pcall(function()
+
 		return PurchaseSoulUpgrade:InvokeServer(
 			unpack(args)
 		)
+
 	end)
 
 	if not success then
@@ -577,17 +643,38 @@ end
 
 
 -- ==========================================
--- Dungeon Runtime
+-- Dynamic Dungeon Runtime
 -- ==========================================
 
-local RaidDungeon =
-	workspace:WaitForChild("RaidDungeon")
+local function GetRaidRuntime()
 
-local RaidRuntime =
-	RaidDungeon:WaitForChild("Runtime")
+	local raidDungeon =
+		workspace:FindFirstChild(
+			"RaidDungeon"
+		)
 
+	if not raidDungeon then
+		return nil
+	end
+
+	return raidDungeon:FindFirstChild(
+		"Runtime"
+	)
+end
+
+
+-- ==========================================
+-- Find Current Raid Enemy
+-- ==========================================
 
 local function GetCurrentRaidEnemy()
+
+	local RaidRuntime =
+		GetRaidRuntime()
+
+	if not RaidRuntime then
+		return nil
+	end
 
 	local bestEnemy = nil
 	local bestFloor = -1
@@ -635,7 +722,18 @@ local function GetCurrentRaidEnemy()
 end
 
 
+-- ==========================================
+-- Find Current Continue Pad
+-- ==========================================
+
 local function GetCurrentContinuePad()
+
+	local RaidRuntime =
+		GetRaidRuntime()
+
+	if not RaidRuntime then
+		return nil
+	end
 
 	local bestPad = nil
 	local bestPrep = -1
@@ -864,6 +962,8 @@ task.spawn(function()
 			continue
 		end
 
+		-- Look dynamically each cycle because
+		-- RaidDungeon may appear/disappear
 		local enemyRoot =
 			GetCurrentRaidEnemy()
 
@@ -905,9 +1005,11 @@ local TianMarkPress =
 	)
 
 if TianMarkPress then
+
 	TianMarkPress.OnClientEvent:Connect(
 		function(...)
 			-- Consume incoming event
 		end
 	)
+
 end
