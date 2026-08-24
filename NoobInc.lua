@@ -36,7 +36,7 @@ local function SaveConfig()
 	end)
 
 	if success then
-		writefile(ConfigFile, encoded)
+		pcall(writefile, ConfigFile, encoded)
 	end
 end
 
@@ -45,7 +45,8 @@ local function LoadConfig()
 		return
 	end
 
-	if not isfile(ConfigFile) then
+	local okExists, exists = pcall(isfile, ConfigFile)
+	if not okExists or not exists then
 		return
 	end
 
@@ -56,7 +57,11 @@ local function LoadConfig()
 	end)
 
 	if success and typeof(decoded) == "table" then
-		Config = decoded
+		-- Merge onto defaults so missing keys from an old
+		-- config file don't turn into nils later on.
+		for key, value in pairs(decoded) do
+			Config[key] = value
+		end
 	end
 end
 
@@ -67,20 +72,35 @@ LoadConfig()
 -- Remotes
 -- ==========================================
 
+local REMOTE_WAIT_TIMEOUT = 10
+
 local RemoteEvents =
-	ReplicatedStorage:WaitForChild("RemoteEvents")
+	ReplicatedStorage:WaitForChild("RemoteEvents", REMOTE_WAIT_TIMEOUT)
+
+if not RemoteEvents then
+	warn("[FatE Hub] RemoteEvents not found, aborting load.")
+	return
+end
+
+local function safeWaitForChild(parent, name)
+	local inst = parent:WaitForChild(name, REMOTE_WAIT_TIMEOUT)
+	if not inst then
+		warn("[FatE Hub] Missing remote:", name)
+	end
+	return inst
+end
 
 local PurchaseHydraUpgrade =
-	RemoteEvents:WaitForChild("PurchaseHydraUpgrade")
+	safeWaitForChild(RemoteEvents, "PurchaseHydraUpgrade")
 
 local PurchaseUpgrade =
-	RemoteEvents:WaitForChild("PurchaseUpgrade")
+	safeWaitForChild(RemoteEvents, "PurchaseUpgrade")
 
 local PurchaseHydraMastery =
-	RemoteEvents:WaitForChild("PurchaseHydraMastery")
+	safeWaitForChild(RemoteEvents, "PurchaseHydraMastery")
 
 local PurchaseSoulUpgrade =
-	RemoteEvents:WaitForChild("purchase_souls_upgrade")
+	safeWaitForChild(RemoteEvents, "purchase_souls_upgrade")
 
 
 -- ==========================================
@@ -403,6 +423,9 @@ SettingsSection:CreateButton({
 
 	Callback = function()
 
+		-- Flip flags first so every coroutine's loop
+		-- condition fails on its next check before we
+		-- touch character/UI state.
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
@@ -452,6 +475,10 @@ SettingsSection:CreateButton({
 
 local function PurchaseTitanUpgrade(upgradeName)
 
+	if not PurchaseHydraUpgrade then
+		return
+	end
+
 	local args = {
 		[1] = upgradeName,
 		[2] = false
@@ -478,15 +505,25 @@ end
 -- ==========================================
 -- Purchase Flora Upgrade
 -- ==========================================
+-- NOTE: PurchaseUpgrade is a FireServer remote, so it has
+-- no return value regardless of whether the purchase
+-- actually succeeds server-side. The pcall here only
+-- catches client-side errors from the call itself (e.g. a
+-- nil remote), not purchase failures like insufficient
+-- currency or a maxed-out upgrade.
 
 local function PurchaseFloraUpgrade(upgradeName)
+
+	if not PurchaseUpgrade then
+		return
+	end
 
 	local args = {
 		[1] = upgradeName,
 		[2] = false
 	}
 
-	local success, result = pcall(function()
+	local success, err = pcall(function()
 
 		PurchaseUpgrade:FireServer(
 			unpack(args)
@@ -498,7 +535,7 @@ local function PurchaseFloraUpgrade(upgradeName)
 		warn(
 			"[Auto Flora] Failed:",
 			upgradeName,
-			result
+			err
 		)
 	end
 end
@@ -509,6 +546,10 @@ end
 -- ==========================================
 
 local function PurchaseMasteryUpgrade(upgradeName)
+
+	if not PurchaseHydraMastery then
+		return
+	end
 
 	local args = {
 		[1] = upgradeName,
@@ -538,6 +579,10 @@ end
 -- ==========================================
 
 local function PurchaseSoulUpgradeByName(upgradeName)
+
+	if not PurchaseSoulUpgrade then
+		return
+	end
 
 	local args = {
 		[1] = upgradeName,
@@ -592,9 +637,53 @@ end
 -- ==========================================
 
 local SoulsRuntime =
-	workspace:WaitForChild("SoulsRuntime")
+	workspace:WaitForChild("SoulsRuntime", REMOTE_WAIT_TIMEOUT)
+
+-- Souls spawn in and sit still rather than moving around,
+-- so instead of doing a recursive FindFirstChild search
+-- through every soul on every poll (4-5x/sec), we resolve
+-- each soul's Body part once when it's added and cache it.
+-- Keyed on the soul instance so cleanup is automatic via
+-- ChildRemoved.
+local SoulBodyCache = {}
+
+local function CacheSoulBody(soul)
+
+	task.spawn(function()
+
+		local body =
+			soul:WaitForChild("Body", 5)
+
+		-- Soul may have already despawned by the time
+		-- WaitForChild resolves (or timed out); only
+		-- cache it if it's still around and valid.
+		if body
+			and body:IsA("BasePart")
+			and soul.Parent then
+
+			SoulBodyCache[soul] = body
+		end
+	end)
+end
+
+if SoulsRuntime then
+
+	for _, soul in ipairs(SoulsRuntime:GetChildren()) do
+		CacheSoulBody(soul)
+	end
+
+	SoulsRuntime.ChildAdded:Connect(CacheSoulBody)
+
+	SoulsRuntime.ChildRemoved:Connect(function(soul)
+		SoulBodyCache[soul] = nil
+	end)
+end
 
 local function GetClosestSoul()
+
+	if not SoulsRuntime then
+		return nil
+	end
 
 	local character = player.Character
 
@@ -614,16 +703,12 @@ local function GetClosestSoul()
 	local closestBody = nil
 	local closestDistance = math.huge
 
-	for _, soul
-		in ipairs(SoulsRuntime:GetChildren()) do
+	for soul, body in pairs(SoulBodyCache) do
 
-		local body =
-			soul:FindFirstChild(
-				"Body",
-				true
-			)
-
-		if body and body:IsA("BasePart") then
+		-- Guard against stale cache entries (soul
+		-- destroyed without ChildRemoved firing yet,
+		-- or body parented out).
+		if soul.Parent and body.Parent then
 
 			local distance =
 				(
@@ -635,6 +720,8 @@ local function GetClosestSoul()
 				closestDistance = distance
 				closestBody = body
 			end
+		else
+			SoulBodyCache[soul] = nil
 		end
 	end
 
@@ -664,13 +751,101 @@ end
 
 
 -- ==========================================
+-- Raid Room Cache
+-- ==========================================
+-- RaidDungeon/Runtime only exists while a dungeon run is
+-- active, and rooms get added dynamically as you progress
+-- (pad first, then the enemy spawns in once you continue).
+-- Rather than recursively re-searching every room for its
+-- RaidEnemy/ContinuePad on every 0.25s poll, we hook
+-- ChildAdded on whichever Runtime instance is currently
+-- live and resolve each room's parts once, caching them by
+-- room. The hook is re-established whenever GetRaidRuntime()
+-- returns a different instance than the one we last hooked
+-- (i.e. a new dungeon run started).
+
+local RoomEnemyCache = {}
+local RoomPadCache = {}
+local HookedRaidRuntime = nil
+
+local function CacheRoomParts(room)
+
+	task.spawn(function()
+
+		local enemy =
+			room:FindFirstChild("RaidEnemy", true)
+				or room:WaitForChild("RaidEnemy", 3)
+
+		if enemy and room.Parent then
+
+			local enemyRoot =
+				enemy:FindFirstChild(
+					"HumanoidRootPart",
+					true
+				)
+
+			if enemyRoot and enemyRoot:IsA("BasePart") then
+				RoomEnemyCache[room] = enemyRoot
+			end
+		end
+	end)
+
+	task.spawn(function()
+
+		local pad =
+			room:FindFirstChild("ContinuePad", true)
+				or room:WaitForChild("ContinuePad", 3)
+
+		if pad
+			and pad:IsA("BasePart")
+			and room.Parent then
+
+			RoomPadCache[room] = pad
+		end
+	end)
+end
+
+local function EnsureRaidRuntimeHooked()
+
+	local RaidRuntime = GetRaidRuntime()
+
+	if RaidRuntime == HookedRaidRuntime then
+		return RaidRuntime
+	end
+
+	-- Runtime instance changed (new run started, or the
+	-- old one went away) - drop stale cache entries and
+	-- rehook.
+	RoomEnemyCache = {}
+	RoomPadCache = {}
+	HookedRaidRuntime = RaidRuntime
+
+	if not RaidRuntime then
+		return nil
+	end
+
+	for _, room in ipairs(RaidRuntime:GetChildren()) do
+		CacheRoomParts(room)
+	end
+
+	RaidRuntime.ChildAdded:Connect(CacheRoomParts)
+
+	RaidRuntime.ChildRemoved:Connect(function(room)
+		RoomEnemyCache[room] = nil
+		RoomPadCache[room] = nil
+	end)
+
+	return RaidRuntime
+end
+
+
+-- ==========================================
 -- Find Current Raid Enemy
 -- ==========================================
 
 local function GetCurrentRaidEnemy()
 
-	local RaidRuntime =
-		GetRaidRuntime()
+	local RaidRuntime = EnsureRaidRuntimeHooked()
 
 	if not RaidRuntime then
 		return nil
@@ -679,42 +854,24 @@ local function GetCurrentRaidEnemy()
 	local bestEnemy = nil
 	local bestFloor = -1
 
-	for _, room
-		in ipairs(RaidRuntime:GetChildren()) do
+	for room, enemyRoot in pairs(RoomEnemyCache) do
 
-		local floorNumber =
-			string.match(
-				room.Name,
-				"_Floor_(%d+)"
-			)
+		if room.Parent and enemyRoot.Parent then
 
-		floorNumber =
-			tonumber(floorNumber)
-
-		if floorNumber
-			and floorNumber > bestFloor then
-
-			local enemy =
-				room:FindFirstChild(
-					"RaidEnemy",
-					true
+			local floorNumber =
+				tonumber(
+					string.match(
+						room.Name,
+						"_Floor_(%d+)"
+					)
 				)
 
-			if enemy then
-
-				local enemyRoot =
-					enemy:FindFirstChild(
-						"HumanoidRootPart",
-						true
-					)
-
-				if enemyRoot
-					and enemyRoot:IsA("BasePart") then
-
-					bestFloor = floorNumber
-					bestEnemy = enemyRoot
-				end
+			if floorNumber and floorNumber > bestFloor then
+				bestFloor = floorNumber
+				bestEnemy = enemyRoot
 			end
+		else
+			RoomEnemyCache[room] = nil
 		end
 	end
 
@@ -728,8 +885,7 @@ end
 
 local function GetCurrentContinuePad()
 
-	local RaidRuntime =
-		GetRaidRuntime()
+	local RaidRuntime = EnsureRaidRuntimeHooked()
 
 	if not RaidRuntime then
 		return nil
@@ -738,33 +894,24 @@ local function GetCurrentContinuePad()
 	local bestPad = nil
 	local bestPrep = -1
 
-	for _, room
-		in ipairs(RaidRuntime:GetChildren()) do
+	for room, pad in pairs(RoomPadCache) do
 
-		local prepNumber =
-			string.match(
-				room.Name,
-				"_Prep_(%d+)"
-			)
+		if room.Parent and pad.Parent then
 
-		prepNumber =
-			tonumber(prepNumber)
-
-		if prepNumber
-			and prepNumber > bestPrep then
-
-			local pad =
-				room:FindFirstChild(
-					"ContinuePad",
-					true
+			local prepNumber =
+				tonumber(
+					string.match(
+						room.Name,
+						"_Prep_(%d+)"
+					)
 				)
 
-			if pad
-				and pad:IsA("BasePart") then
-
+			if prepNumber and prepNumber > bestPrep then
 				bestPrep = prepNumber
 				bestPad = pad
 			end
+		else
+			RoomPadCache[room] = nil
 		end
 	end
 
@@ -1008,7 +1155,9 @@ if TianMarkPress then
 
 	TianMarkPress.OnClientEvent:Connect(
 		function(...)
-			-- Consume incoming event
+			-- Consume incoming event.
+			-- No-op: nothing in this script currently
+			-- depends on this event's payload.
 		end
 	)
 
