@@ -45,11 +45,7 @@ local function LoadConfig()
 		return
 	end
 
-	local okExists, exists = pcall(
-		isfile,
-		ConfigFile
-	)
-
+	local okExists, exists = pcall(isfile, ConfigFile)
 	if not okExists or not exists then
 		return
 	end
@@ -61,8 +57,8 @@ local function LoadConfig()
 	end)
 
 	if success and typeof(decoded) == "table" then
-
-		-- Merge saved values onto defaults.
+		-- Merge onto defaults so missing keys from an old
+		-- config file don't turn into nils later on.
 		for key, value in pairs(decoded) do
 			Config[key] = value
 		end
@@ -79,62 +75,32 @@ LoadConfig()
 local REMOTE_WAIT_TIMEOUT = 10
 
 local RemoteEvents =
-	ReplicatedStorage:WaitForChild(
-		"RemoteEvents",
-		REMOTE_WAIT_TIMEOUT
-	)
+	ReplicatedStorage:WaitForChild("RemoteEvents", REMOTE_WAIT_TIMEOUT)
 
 if not RemoteEvents then
-	warn(
-		"[FatE Hub] RemoteEvents not found, aborting load."
-	)
-
+	warn("[FatE Hub] RemoteEvents not found, aborting load.")
 	return
 end
 
-
 local function safeWaitForChild(parent, name)
-
-	local inst =
-		parent:WaitForChild(
-			name,
-			REMOTE_WAIT_TIMEOUT
-		)
-
+	local inst = parent:WaitForChild(name, REMOTE_WAIT_TIMEOUT)
 	if not inst then
-		warn(
-			"[FatE Hub] Missing remote:",
-			name
-		)
+		warn("[FatE Hub] Missing remote:", name)
 	end
-
 	return inst
 end
 
-
 local PurchaseHydraUpgrade =
-	safeWaitForChild(
-		RemoteEvents,
-		"PurchaseHydraUpgrade"
-	)
+	safeWaitForChild(RemoteEvents, "PurchaseHydraUpgrade")
 
 local PurchaseUpgrade =
-	safeWaitForChild(
-		RemoteEvents,
-		"PurchaseUpgrade"
-	)
+	safeWaitForChild(RemoteEvents, "PurchaseUpgrade")
 
 local PurchaseHydraMastery =
-	safeWaitForChild(
-		RemoteEvents,
-		"PurchaseHydraMastery"
-	)
+	safeWaitForChild(RemoteEvents, "PurchaseHydraMastery")
 
 local PurchaseSoulUpgrade =
-	safeWaitForChild(
-		RemoteEvents,
-		"purchase_souls_upgrade"
-	)
+	safeWaitForChild(RemoteEvents, "purchase_souls_upgrade")
 
 
 -- ==========================================
@@ -142,7 +108,6 @@ local PurchaseSoulUpgrade =
 -- ==========================================
 
 local function HumanDelay()
-
 	local delayTime =
 		0.4 + math.random() * 0.6
 
@@ -205,14 +170,11 @@ local ScriptRunning = true
 local AutoTitanEnabled = false
 local AutoFloraEnabled = false
 local AutoMasteryEnabled = false
-
 local AutoSoulEnabled = false
 local AutoSoulUpgradesEnabled = false
-
 local AutoDungeonEnabled = false
 
 local WalkSpeed = 16
-
 
 local SelectedTitanUpgrades =
 	Config.TitanUpgrades or {}
@@ -240,7 +202,6 @@ TitanSection:CreateToggle({
 	end
 })
 
-
 local TitanDropdown =
 	TitanSection:CreateDropdown({
 
@@ -256,13 +217,8 @@ local TitanDropdown =
 	Multi = true,
 
 	Callback = function(selected)
-
-		SelectedTitanUpgrades =
-			selected
-
-		Config.TitanUpgrades =
-			selected
-
+		SelectedTitanUpgrades = selected
+		Config.TitanUpgrades = selected
 		SaveConfig()
 	end
 })
@@ -281,7 +237,6 @@ FloraSection:CreateToggle({
 	end
 })
 
-
 local FloraDropdown =
 	FloraSection:CreateDropdown({
 
@@ -295,13 +250,8 @@ local FloraDropdown =
 	Multi = true,
 
 	Callback = function(selected)
-
-		SelectedFloraUpgrades =
-			selected
-
-		Config.FloraUpgrades =
-			selected
-
+		SelectedFloraUpgrades = selected
+		Config.FloraUpgrades = selected
 		SaveConfig()
 	end
 })
@@ -320,7 +270,6 @@ MasterySection:CreateToggle({
 	end
 })
 
-
 local MasteryDropdown =
 	MasterySection:CreateDropdown({
 
@@ -333,13 +282,8 @@ local MasteryDropdown =
 	Multi = true,
 
 	Callback = function(selected)
-
-		SelectedMasteryUpgrades =
-			selected
-
-		Config.MasteryUpgrades =
-			selected
-
+		SelectedMasteryUpgrades = selected
+		Config.MasteryUpgrades = selected
 		SaveConfig()
 	end
 })
@@ -358,7 +302,6 @@ SoulSection:CreateToggle({
 	end
 })
 
-
 SoulSection:CreateToggle({
 	Name = "Auto Soul Upgrades",
 	Default = false,
@@ -367,7 +310,6 @@ SoulSection:CreateToggle({
 		AutoSoulUpgradesEnabled = enabled
 	end
 })
-
 
 local SoulUpgradeDropdown =
 	SoulSection:CreateDropdown({
@@ -388,13 +330,8 @@ local SoulUpgradeDropdown =
 	Multi = true,
 
 	Callback = function(selected)
-
-		SelectedSoulUpgrades =
-			selected
-
-		Config.SoulUpgrades =
-			selected
-
+		SelectedSoulUpgrades = selected
+		Config.SoulUpgrades = selected
 		SaveConfig()
 	end
 })
@@ -409,9 +346,7 @@ DungeonSection:CreateToggle({
 	Default = false,
 
 	Callback = function(enabled)
-
 		AutoDungeonEnabled = enabled
-
 	end
 })
 
@@ -422,18 +357,15 @@ DungeonSection:CreateToggle({
 
 SettingsSection:CreateSlider({
 	Name = "Walk Speed",
-
 	Min = 8,
 	Max = 50,
 	Default = 16,
 	Increment = 1,
 
 	Callback = function(value)
-
 		WalkSpeed = value
 
-		local character =
-			player.Character
+		local character = player.Character
 
 		if not character then
 			return
@@ -445,30 +377,20 @@ SettingsSection:CreateSlider({
 			)
 
 		if humanoid then
-			humanoid.WalkSpeed =
-				value
+			humanoid.WalkSpeed = value
 		end
 	end
 })
 
 
--- ==========================================
--- Apply Walk Speed After Respawn
--- ==========================================
+-- Reapply walk speed after respawn
+player.CharacterAdded:Connect(function(character)
 
-player.CharacterAdded:Connect(
-	function(character)
+	local humanoid =
+		character:WaitForChild("Humanoid")
 
-		local humanoid =
-			character:WaitForChild(
-				"Humanoid"
-			)
-
-		humanoid.WalkSpeed =
-			WalkSpeed
-
-	end
-)
+	humanoid.WalkSpeed = WalkSpeed
+end)
 
 
 -- ==========================================
@@ -501,22 +423,20 @@ SettingsSection:CreateButton({
 
 	Callback = function()
 
+		-- Flip flags first so every coroutine's loop
+		-- condition fails on its next check before we
+		-- touch character/UI state.
 		ScriptRunning = false
 
 		AutoTitanEnabled = false
 		AutoFloraEnabled = false
 		AutoMasteryEnabled = false
-
 		AutoSoulEnabled = false
 		AutoSoulUpgradesEnabled = false
-
 		AutoDungeonEnabled = false
 
-
 		-- Stop current movement
-
-		local character =
-			player.Character
+		local character = player.Character
 
 		if character then
 
@@ -531,20 +451,15 @@ SettingsSection:CreateButton({
 				)
 
 			if humanoid and root then
-
 				humanoid:MoveTo(
 					root.Position
 				)
-
 			end
 		end
 
-
 		-- Hide/remove UI
-
 		if Window.MainFrame then
-			Window.MainFrame.Visible =
-				false
+			Window.MainFrame.Visible = false
 		end
 
 		if Window.ScreenGui then
@@ -558,9 +473,7 @@ SettingsSection:CreateButton({
 -- Purchase Titan Upgrade
 -- ==========================================
 
-local function PurchaseTitanUpgrade(
-	upgradeName
-)
+local function PurchaseTitanUpgrade(upgradeName)
 
 	if not PurchaseHydraUpgrade then
 		return
@@ -571,23 +484,20 @@ local function PurchaseTitanUpgrade(
 		[2] = false
 	}
 
-	local success, result =
-		pcall(function()
+	local success, result = pcall(function()
 
-			return PurchaseHydraUpgrade:InvokeServer(
-				unpack(args)
-			)
+		return PurchaseHydraUpgrade:InvokeServer(
+			unpack(args)
+		)
 
-		end)
+	end)
 
 	if not success then
-
 		warn(
 			"[Auto Titan] Failed:",
 			upgradeName,
 			result
 		)
-
 	end
 end
 
@@ -595,10 +505,14 @@ end
 -- ==========================================
 -- Purchase Flora Upgrade
 -- ==========================================
+-- NOTE: PurchaseUpgrade is a FireServer remote, so it has
+-- no return value regardless of whether the purchase
+-- actually succeeds server-side. The pcall here only
+-- catches client-side errors from the call itself (e.g. a
+-- nil remote), not purchase failures like insufficient
+-- currency or a maxed-out upgrade.
 
-local function PurchaseFloraUpgrade(
-	upgradeName
-)
+local function PurchaseFloraUpgrade(upgradeName)
 
 	if not PurchaseUpgrade then
 		return
@@ -609,23 +523,20 @@ local function PurchaseFloraUpgrade(
 		[2] = false
 	}
 
-	local success, err =
-		pcall(function()
+	local success, err = pcall(function()
 
-			PurchaseUpgrade:FireServer(
-				unpack(args)
-			)
+		PurchaseUpgrade:FireServer(
+			unpack(args)
+		)
 
-		end)
+	end)
 
 	if not success then
-
 		warn(
 			"[Auto Flora] Failed:",
 			upgradeName,
 			err
 		)
-
 	end
 end
 
@@ -634,9 +545,7 @@ end
 -- Purchase Mastery Upgrade
 -- ==========================================
 
-local function PurchaseMasteryUpgrade(
-	upgradeName
-)
+local function PurchaseMasteryUpgrade(upgradeName)
 
 	if not PurchaseHydraMastery then
 		return
@@ -647,23 +556,20 @@ local function PurchaseMasteryUpgrade(
 		[2] = false
 	}
 
-	local success, result =
-		pcall(function()
+	local success, result = pcall(function()
 
-			return PurchaseHydraMastery:InvokeServer(
-				unpack(args)
-			)
+		return PurchaseHydraMastery:InvokeServer(
+			unpack(args)
+		)
 
-		end)
+	end)
 
 	if not success then
-
 		warn(
 			"[Auto Mastery] Failed:",
 			upgradeName,
 			result
 		)
-
 	end
 end
 
@@ -672,9 +578,7 @@ end
 -- Purchase Soul Upgrade
 -- ==========================================
 
-local function PurchaseSoulUpgradeByName(
-	upgradeName
-)
+local function PurchaseSoulUpgradeByName(upgradeName)
 
 	if not PurchaseSoulUpgrade then
 		return
@@ -685,23 +589,20 @@ local function PurchaseSoulUpgradeByName(
 		[2] = false
 	}
 
-	local success, result =
-		pcall(function()
+	local success, result = pcall(function()
 
-			return PurchaseSoulUpgrade:InvokeServer(
-				unpack(args)
-			)
+		return PurchaseSoulUpgrade:InvokeServer(
+			unpack(args)
+		)
 
-		end)
+	end)
 
 	if not success then
-
 		warn(
 			"[Auto Soul Upgrades] Failed:",
 			upgradeName,
 			result
 		)
-
 	end
 end
 
@@ -712,8 +613,7 @@ end
 
 local function MoveToPosition(position)
 
-	local character =
-		player.Character
+	local character = player.Character
 
 	if not character then
 		return
@@ -728,79 +628,56 @@ local function MoveToPosition(position)
 		return
 	end
 
-	humanoid:MoveTo(
-		position
-	)
+	humanoid:MoveTo(position)
 end
 
 
 -- ==========================================
--- Souls Runtime
+-- Soul Collection
 -- ==========================================
 
 local SoulsRuntime =
-	workspace:WaitForChild(
-		"SoulsRuntime",
-		REMOTE_WAIT_TIMEOUT
-	)
+	workspace:WaitForChild("SoulsRuntime", REMOTE_WAIT_TIMEOUT)
 
-
--- ==========================================
--- Soul Cache
--- ==========================================
-
+-- Souls spawn in and sit still rather than moving around,
+-- so instead of doing a recursive FindFirstChild search
+-- through every soul on every poll (4-5x/sec), we resolve
+-- each soul's Body part once when it's added and cache it.
+-- Keyed on the soul instance so cleanup is automatic via
+-- ChildRemoved.
 local SoulBodyCache = {}
-
 
 local function CacheSoulBody(soul)
 
 	task.spawn(function()
 
 		local body =
-			soul:WaitForChild(
-				"Body",
-				5
-			)
+			soul:WaitForChild("Body", 5)
 
+		-- Soul may have already despawned by the time
+		-- WaitForChild resolves (or timed out); only
+		-- cache it if it's still around and valid.
 		if body
 			and body:IsA("BasePart")
 			and soul.Parent then
 
-			SoulBodyCache[soul] =
-				body
-
+			SoulBodyCache[soul] = body
 		end
-
 	end)
 end
 
-
 if SoulsRuntime then
 
-	for _, soul
-		in ipairs(
-			SoulsRuntime:GetChildren()
-		) do
-
+	for _, soul in ipairs(SoulsRuntime:GetChildren()) do
 		CacheSoulBody(soul)
 	end
 
+	SoulsRuntime.ChildAdded:Connect(CacheSoulBody)
 
-	SoulsRuntime.ChildAdded:Connect(
-		CacheSoulBody
-	)
-
-
-	SoulsRuntime.ChildRemoved:Connect(
-		function(soul)
-
-			SoulBodyCache[soul] =
-				nil
-
-		end
-	)
+	SoulsRuntime.ChildRemoved:Connect(function(soul)
+		SoulBodyCache[soul] = nil
+	end)
 end
-
 
 local function GetClosestSoul()
 
@@ -808,8 +685,7 @@ local function GetClosestSoul()
 		return nil
 	end
 
-	local character =
-		player.Character
+	local character = player.Character
 
 	if not character then
 		return nil
@@ -825,15 +701,14 @@ local function GetClosestSoul()
 	end
 
 	local closestBody = nil
-	local closestDistance =
-		math.huge
+	local closestDistance = math.huge
 
+	for soul, body in pairs(SoulBodyCache) do
 
-	for soul, body
-		in pairs(SoulBodyCache) do
-
-		if soul.Parent
-			and body.Parent then
+		-- Guard against stale cache entries (soul
+		-- destroyed without ChildRemoved firing yet,
+		-- or body parented out).
+		if soul.Parent and body.Parent then
 
 			local distance =
 				(
@@ -841,22 +716,12 @@ local function GetClosestSoul()
 					- body.Position
 				).Magnitude
 
-			if distance
-				< closestDistance then
-
-				closestDistance =
-					distance
-
-				closestBody =
-					body
-
+			if distance < closestDistance then
+				closestDistance = distance
+				closestBody = body
 			end
-
 		else
-
-			SoulBodyCache[soul] =
-				nil
-
+			SoulBodyCache[soul] = nil
 		end
 	end
 
@@ -886,46 +751,42 @@ end
 
 
 -- ==========================================
--- Dungeon Cache
+-- Raid Room Cache
 -- ==========================================
+-- RaidDungeon/Runtime only exists while a dungeon run is
+-- active, and rooms get added dynamically as you progress
+-- (pad first, then the enemy spawns in once you continue).
+-- Rather than recursively re-searching every room for its
+-- RaidEnemy/ContinuePad on every 0.25s poll, we hook
+-- ChildAdded on whichever Runtime instance is currently
+-- live and resolve each room's parts once, caching them by
+-- room. The hook is re-established whenever GetRaidRuntime()
+-- returns a different instance than the one we last hooked
+-- (i.e. a new dungeon run started).
 
 local RoomEnemyCache = {}
 local RoomPadCache = {}
-
+local RoomConnections = {}
 local HookedRaidRuntime = nil
 
-local DungeonConnections = {}
+local function DisconnectRoom(room)
 
+	local conns = RoomConnections[room]
 
--- ==========================================
--- Disconnect Old Dungeon Connections
--- ==========================================
-
-local function ClearDungeonConnections()
-
-	for _, connection
-		in ipairs(DungeonConnections) do
-
-		if connection
-			and connection.Connected then
-
-			connection:Disconnect()
-
+	if conns then
+		for _, conn in ipairs(conns) do
+			conn:Disconnect()
 		end
+		RoomConnections[room] = nil
 	end
-
-	table.clear(
-		DungeonConnections
-	)
-
 end
 
-
--- ==========================================
--- Cache Dungeon Room
--- ==========================================
-
 local function CacheRoomParts(room)
+
+	DisconnectRoom(room)
+
+	local conns = {}
+	RoomConnections[room] = conns
 
 	local function CheckDescendant(instance)
 
@@ -936,181 +797,108 @@ local function CacheRoomParts(room)
 		if instance.Name == "ContinuePad"
 			and instance:IsA("BasePart") then
 
-			RoomPadCache[room] =
-				instance
-
+			RoomPadCache[room] = instance
 			return
 		end
 
-
 		-- =========================
-		-- Enemy HumanoidRootPart
+		-- Raid Enemy
 		-- =========================
 
-		if instance.Name
-				== "HumanoidRootPart"
+		if instance.Name == "HumanoidRootPart"
 			and instance:IsA("BasePart") then
 
 			local raidEnemy =
-				instance:FindFirstAncestor(
-					"RaidEnemy"
-				)
+				instance:FindFirstAncestor("RaidEnemy")
 
-			if raidEnemy then
+			if raidEnemy
+				and raidEnemy:IsDescendantOf(room) then
 
-				RoomEnemyCache[room] =
-					instance
-
+				-- Always replace the cached enemy.
+				-- This allows later enemies in the same
+				-- room/floor to become the current target.
+				RoomEnemyCache[room] = instance
 			end
 		end
 	end
 
-
-	-- =========================
-	-- Existing descendants
-	-- =========================
-
-	for _, descendant
-		in ipairs(
-			room:GetDescendants()
-		) do
-
-		CheckDescendant(
-			descendant
-		)
-
+	-- Check everything that already exists.
+	for _, descendant in ipairs(room:GetDescendants()) do
+		CheckDescendant(descendant)
 	end
 
-
-	-- =========================
-	-- Future descendants
-	-- =========================
-
-	local connection =
-		room.DescendantAdded:Connect(
-			function(descendant)
-
-				CheckDescendant(
-					descendant
-				)
-
-			end
-		)
-
+	-- Catch enemies and pads that appear later.
 	table.insert(
-		DungeonConnections,
-		connection
+		conns,
+		room.DescendantAdded:Connect(function(descendant)
+			CheckDescendant(descendant)
+		end)
 	)
 
+	-- Clear cached references as soon as their instance
+	-- starts being removed, so a replacement enemy can
+	-- take over cleanly.
+	table.insert(
+		conns,
+		room.DescendantRemoving:Connect(function(descendant)
+
+			if RoomEnemyCache[room] == descendant then
+				RoomEnemyCache[room] = nil
+			end
+
+			if RoomPadCache[room] == descendant then
+				RoomPadCache[room] = nil
+			end
+		end)
+	)
 end
-
-
--- ==========================================
--- Hook Dungeon Runtime
--- ==========================================
 
 local function EnsureRaidRuntimeHooked()
 
-	local RaidRuntime =
-		GetRaidRuntime()
+	local RaidRuntime = GetRaidRuntime()
 
-	if RaidRuntime
-		== HookedRaidRuntime then
-
+	if RaidRuntime == HookedRaidRuntime then
 		return RaidRuntime
-
 	end
 
-
-	-- Runtime changed.
-	-- Remove all old room listeners.
-
-	ClearDungeonConnections()
+	-- Runtime instance changed (new run started, or the
+	-- old one went away) - drop stale cache entries,
+	-- disconnect old listeners, and rehook.
+	for room in pairs(RoomConnections) do
+		DisconnectRoom(room)
+	end
 
 	RoomEnemyCache = {}
 	RoomPadCache = {}
-
-	HookedRaidRuntime =
-		RaidRuntime
-
+	HookedRaidRuntime = RaidRuntime
 
 	if not RaidRuntime then
 		return nil
 	end
 
-
-	-- =========================
-	-- Existing rooms
-	-- =========================
-
-	for _, room
-		in ipairs(
-			RaidRuntime:GetChildren()
-		) do
-
-		CacheRoomParts(
-			room
-		)
-
+	for _, room in ipairs(RaidRuntime:GetChildren()) do
+		CacheRoomParts(room)
 	end
 
+	RaidRuntime.ChildAdded:Connect(CacheRoomParts)
 
-	-- =========================
-	-- New rooms
-	-- =========================
-
-	local addedConnection =
-		RaidRuntime.ChildAdded:Connect(
-			function(room)
-
-				CacheRoomParts(
-					room
-				)
-
-			end
-		)
-
-	table.insert(
-		DungeonConnections,
-		addedConnection
-	)
-
-
-	-- =========================
-	-- Removed rooms
-	-- =========================
-
-	local removedConnection =
-		RaidRuntime.ChildRemoved:Connect(
-			function(room)
-
-				RoomEnemyCache[room] =
-					nil
-
-				RoomPadCache[room] =
-					nil
-
-			end
-		)
-
-	table.insert(
-		DungeonConnections,
-		removedConnection
-	)
-
+	RaidRuntime.ChildRemoved:Connect(function(room)
+		RoomEnemyCache[room] = nil
+		RoomPadCache[room] = nil
+		DisconnectRoom(room)
+	end)
 
 	return RaidRuntime
 end
 
 
 -- ==========================================
--- Get Current Dungeon Enemy
+-- Find Current Raid Enemy
 -- ==========================================
 
 local function GetCurrentRaidEnemy()
 
-	local RaidRuntime =
-		EnsureRaidRuntimeHooked()
+	local RaidRuntime = EnsureRaidRuntimeHooked()
 
 	if not RaidRuntime then
 		return nil
@@ -1119,12 +907,9 @@ local function GetCurrentRaidEnemy()
 	local bestEnemy = nil
 	local bestFloor = -1
 
+	for room, enemyRoot in pairs(RoomEnemyCache) do
 
-	for room, enemyRoot
-		in pairs(RoomEnemyCache) do
-
-		if room.Parent
-			and enemyRoot.Parent then
+		if room.Parent and enemyRoot.Parent then
 
 			local floorNumber =
 				tonumber(
@@ -1134,39 +919,26 @@ local function GetCurrentRaidEnemy()
 					)
 				)
 
-			if floorNumber
-				and floorNumber
-					> bestFloor then
-
-				bestFloor =
-					floorNumber
-
-				bestEnemy =
-					enemyRoot
-
+			if floorNumber and floorNumber > bestFloor then
+				bestFloor = floorNumber
+				bestEnemy = enemyRoot
 			end
-
 		else
-
-			RoomEnemyCache[room] =
-				nil
-
+			RoomEnemyCache[room] = nil
 		end
 	end
-
 
 	return bestEnemy
 end
 
 
 -- ==========================================
--- Get Current Continue Pad
+-- Find Current Continue Pad
 -- ==========================================
 
 local function GetCurrentContinuePad()
 
-	local RaidRuntime =
-		EnsureRaidRuntimeHooked()
+	local RaidRuntime = EnsureRaidRuntimeHooked()
 
 	if not RaidRuntime then
 		return nil
@@ -1175,12 +947,9 @@ local function GetCurrentContinuePad()
 	local bestPad = nil
 	local bestPrep = -1
 
+	for room, pad in pairs(RoomPadCache) do
 
-	for room, pad
-		in pairs(RoomPadCache) do
-
-		if room.Parent
-			and pad.Parent then
+		if room.Parent and pad.Parent then
 
 			local prepNumber =
 				tonumber(
@@ -1190,26 +959,14 @@ local function GetCurrentContinuePad()
 					)
 				)
 
-			if prepNumber
-				and prepNumber
-					> bestPrep then
-
-				bestPrep =
-					prepNumber
-
-				bestPad =
-					pad
-
+			if prepNumber and prepNumber > bestPrep then
+				bestPrep = prepNumber
+				bestPad = pad
 			end
-
 		else
-
-			RoomPadCache[room] =
-				nil
-
+			RoomPadCache[room] = nil
 		end
 	end
-
 
 	return bestPad
 end
@@ -1224,41 +981,28 @@ task.spawn(function()
 	while ScriptRunning do
 
 		if not AutoTitanEnabled then
-
 			task.wait(0.1)
 			continue
-
 		end
 
-
-		if #SelectedTitanUpgrades
-			== 0 then
-
+		if #SelectedTitanUpgrades == 0 then
 			task.wait(0.1)
 			continue
-
 		end
-
 
 		for _, upgradeName
-			in ipairs(
-				SelectedTitanUpgrades
-			) do
+			in ipairs(SelectedTitanUpgrades) do
 
 			if not ScriptRunning
 				or not AutoTitanEnabled then
-
 				break
-
 			end
-
 
 			PurchaseTitanUpgrade(
 				upgradeName
 			)
 
 			HumanDelay()
-
 		end
 	end
 end)
@@ -1273,41 +1017,28 @@ task.spawn(function()
 	while ScriptRunning do
 
 		if not AutoFloraEnabled then
-
 			task.wait(0.1)
 			continue
-
 		end
 
-
-		if #SelectedFloraUpgrades
-			== 0 then
-
+		if #SelectedFloraUpgrades == 0 then
 			task.wait(0.1)
 			continue
-
 		end
-
 
 		for _, upgradeName
-			in ipairs(
-				SelectedFloraUpgrades
-			) do
+			in ipairs(SelectedFloraUpgrades) do
 
 			if not ScriptRunning
 				or not AutoFloraEnabled then
-
 				break
-
 			end
-
 
 			PurchaseFloraUpgrade(
 				upgradeName
 			)
 
 			HumanDelay()
-
 		end
 	end
 end)
@@ -1322,41 +1053,28 @@ task.spawn(function()
 	while ScriptRunning do
 
 		if not AutoMasteryEnabled then
-
 			task.wait(0.1)
 			continue
-
 		end
 
-
-		if #SelectedMasteryUpgrades
-			== 0 then
-
+		if #SelectedMasteryUpgrades == 0 then
 			task.wait(0.1)
 			continue
-
 		end
-
 
 		for _, upgradeName
-			in ipairs(
-				SelectedMasteryUpgrades
-			) do
+			in ipairs(SelectedMasteryUpgrades) do
 
 			if not ScriptRunning
 				or not AutoMasteryEnabled then
-
 				break
-
 			end
-
 
 			PurchaseMasteryUpgrade(
 				upgradeName
 			)
 
 			HumanDelay()
-
 		end
 	end
 end)
@@ -1371,41 +1089,28 @@ task.spawn(function()
 	while ScriptRunning do
 
 		if not AutoSoulUpgradesEnabled then
-
 			task.wait(0.1)
 			continue
-
 		end
 
-
-		if #SelectedSoulUpgrades
-			== 0 then
-
+		if #SelectedSoulUpgrades == 0 then
 			task.wait(0.1)
 			continue
-
 		end
-
 
 		for _, upgradeName
-			in ipairs(
-				SelectedSoulUpgrades
-			) do
+			in ipairs(SelectedSoulUpgrades) do
 
 			if not ScriptRunning
 				or not AutoSoulUpgradesEnabled then
-
 				break
-
 			end
-
 
 			PurchaseSoulUpgradeByName(
 				upgradeName
 			)
 
 			HumanDelay()
-
 		end
 	end
 end)
@@ -1420,16 +1125,12 @@ task.spawn(function()
 	while ScriptRunning do
 
 		if not AutoSoulEnabled then
-
 			task.wait(0.2)
 			continue
-
 		end
-
 
 		local soul =
 			GetClosestSoul()
-
 
 		if soul then
 
@@ -1452,34 +1153,18 @@ end)
 -- Auto Dungeon Loop
 -- ==========================================
 
+local LastEnemySeen = 0
+local ENEMY_GRACE_TIME = 1.5
+
 task.spawn(function()
-
-	local LastPad = nil
-
-	local WaitingForEnemy =
-		false
-
-	local PadReachedTime =
-		0
-
 
 	while ScriptRunning do
 
-		-- =========================
-		-- Dungeon OFF
-		-- =========================
-
 		if not AutoDungeonEnabled then
-
-			LastPad = nil
-			WaitingForEnemy = false
-
+			LastEnemySeen = 0
 			task.wait(0.2)
-
 			continue
-
 		end
-
 
 		-- =========================
 		-- Enemy always has priority
@@ -1488,122 +1173,52 @@ task.spawn(function()
 		local enemyRoot =
 			GetCurrentRaidEnemy()
 
-
 		if enemyRoot then
 
-			WaitingForEnemy =
-				false
-
-			LastPad =
-				nil
-
+			LastEnemySeen = os.clock()
 
 			MoveToPosition(
 				enemyRoot.Position
 			)
 
 			task.wait(0.2)
-
 			continue
-
 		end
 
-
 		-- =========================
-		-- Waiting after stepping
-		-- onto the pad
+		-- Enemy grace period
 		-- =========================
+		-- There can be a short gap between enemies.
+		-- Do not immediately leave for the pad during
+		-- that gap.
 
-		if WaitingForEnemy then
+		if LastEnemySeen > 0
+			and os.clock() - LastEnemySeen < ENEMY_GRACE_TIME then
 
-			-- Give the game several
-			-- seconds to spawn RaidEnemy.
-
-			if os.clock()
-					- PadReachedTime
-				< 5 then
-
-				task.wait(0.2)
-
-				continue
-
-			end
-
-
-			WaitingForEnemy =
-				false
-
+			task.wait(0.2)
+			continue
 		end
 
-
 		-- =========================
-		-- Look for continue pad
+		-- No enemy found, use pad
 		-- =========================
 
 		local continuePad =
 			GetCurrentContinuePad()
 
+		if continuePad then
 
-		if continuePad
-			and continuePad
-				~= LastPad then
+			MoveToPosition(
+				continuePad.Position
+			)
 
-
-			local character =
-				player.Character
-
-
-			local root =
-				character
-				and character:FindFirstChild(
-					"HumanoidRootPart"
-				)
-
-
-			if root then
-
-				local distance =
-					(
-						root.Position
-						- continuePad.Position
-					).Magnitude
-
-
-				-- =========================
-				-- Walk toward pad
-				-- =========================
-
-				if distance > 4 then
-
-					MoveToPosition(
-						continuePad.Position
-					)
-
-
-				-- =========================
-				-- Reached pad
-				-- =========================
-
-				else
-
-					LastPad =
-						continuePad
-
-					WaitingForEnemy =
-						true
-
-					PadReachedTime =
-						os.clock()
-
-				end
-			end
+			task.wait(0.25)
+			continue
 		end
 
-
-		task.wait(0.2)
+		task.wait(0.5)
 	end
 end)
-
 
 -- ==========================================
 -- TianMarkPress Listener
@@ -1614,14 +1229,13 @@ local TianMarkPress =
 		"TianMarkPress"
 	)
 
-
 if TianMarkPress then
 
 	TianMarkPress.OnClientEvent:Connect(
 		function(...)
-
 			-- Consume incoming event.
-
+			-- No-op: nothing in this script currently
+			-- depends on this event's payload.
 		end
 	)
 
